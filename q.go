@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
 )
 
 var (
@@ -65,8 +66,9 @@ func Printf(format string, a ...interface{}) {
 }
 
 func prefix(pc uintptr, file string, line int) string {
+	t := time.Now().Format("15:04:05")
 	shortFile := filepath.Base(file)
 	callerName := runtime.FuncForPC(pc).Name()
 
-	return fmt.Sprintf("%s:%d %s", shortFile, line, callerName)
+	return fmt.Sprintf("[%s %s:%d %s]", t, shortFile, line, callerName)
 }
