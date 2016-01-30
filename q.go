@@ -18,10 +18,13 @@ func Println(a ...interface{}) {
 	}
 	defer fd.Close()
 
-	_, file, line, ok := runtime.Caller(1)
+	ptr, file, line, ok := runtime.Caller(1)
 	if ok {
 		file = filepath.Base(file)
-		s := []interface{}{fmt.Sprintf("%s:%d", file, line)}
+		s := []interface{}{
+			fmt.Sprintf("%s:%d", file, line), // filename:number
+			runtime.FuncForPC(ptr).Name(),    // caller name
+		}
 		s = append(s, a...)
 
 		_, err = fmt.Fprintln(fd, s...)
