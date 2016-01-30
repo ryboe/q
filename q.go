@@ -3,10 +3,12 @@ package q
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 )
 
 var (
-	LogFile = "/var/log/q.log"
+	LogFile = "/var/log/q"
 )
 
 func Println(a ...interface{}) {
@@ -16,7 +18,17 @@ func Println(a ...interface{}) {
 	}
 	defer fd.Close()
 
-	_, err = fmt.Fprintln(fd, a...)
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		file = filepath.Base(file)
+		s := []interface{}{fmt.Sprintf("%s:%d", file, line)}
+		s = append(s, a...)
+
+		_, err = fmt.Fprintln(fd, s...)
+	} else {
+		_, err = fmt.Fprintln(fd, a...)
+	}
+
 	if err != nil {
 		panic(err)
 	}
