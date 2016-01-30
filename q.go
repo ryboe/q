@@ -1,4 +1,4 @@
-package j
+package q
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	LogFile = "/var/log/j.log"
+	LogFile = "/var/log/q.log"
 )
 
 func Println(a ...interface{}) {
