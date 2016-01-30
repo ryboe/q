@@ -19,16 +19,11 @@ func Println(a ...interface{}) {
 	}
 	defer fd.Close()
 
-	ptr, file, line, ok := runtime.Caller(1)
+	pc, file, line, ok := runtime.Caller(1)
 	if ok {
-		file = filepath.Base(file)
-		s := []interface{}{
-			fmt.Sprintf("%s:%d", file, line), // filename:number
-			runtime.FuncForPC(ptr).Name(),    // caller name
-		}
-		s = append(s, a...)
-
-		_, err = fmt.Fprintln(fd, s...)
+		p := []interface{}{prefix(pc, file, line)}
+		a = append(p, a...)
+		_, err = fmt.Fprintln(fd, a...)
 	} else {
 		_, err = fmt.Fprintln(fd, a...)
 	}
@@ -46,8 +41,22 @@ func Printf(format string, a ...interface{}) {
 	}
 	defer fd.Close()
 
-	_, err = fmt.Fprintf(fd, format, a...)
+	pc, file, line, ok := runtime.Caller(1)
+	if ok {
+		p := prefix(pc, file, line)
+		_, err = fmt.Fprintf(fd, p+" "+format, a...)
+	} else {
+		_, err = fmt.Fprintf(fd, format, a...)
+	}
+
 	if err != nil {
 		panic(err)
 	}
+}
+
+func prefix(pc uintptr, file string, line int) string {
+	shortFile := filepath.Base(file)
+	callerName := runtime.FuncForPC(pc).Name()
+
+	return fmt.Sprintf("%s:%d %s", shortFile, line, callerName)
 }
