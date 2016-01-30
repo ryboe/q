@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 )
 
 var (
 	LogFile = "q.log"
+	mu      sync.Mutex
 )
 
 func Println(a ...interface{}) {
@@ -23,9 +25,13 @@ func Println(a ...interface{}) {
 	if ok {
 		p := []interface{}{prefix(pc, file, line)}
 		a = append(p, a...)
+		mu.Lock()
 		_, err = fmt.Fprintln(fd, a...)
+		mu.Unlock()
 	} else {
+		mu.Lock()
 		_, err = fmt.Fprintln(fd, a...)
+		mu.Unlock()
 	}
 
 	if err != nil {
@@ -44,9 +50,13 @@ func Printf(format string, a ...interface{}) {
 	pc, file, line, ok := runtime.Caller(1)
 	if ok {
 		p := prefix(pc, file, line)
+		mu.Lock()
 		_, err = fmt.Fprintf(fd, p+" "+format, a...)
+		mu.Unlock()
 	} else {
+		mu.Lock()
 		_, err = fmt.Fprintf(fd, format, a...)
+		mu.Unlock()
 	}
 
 	if err != nil {
