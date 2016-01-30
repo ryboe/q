@@ -8,11 +8,12 @@ import (
 )
 
 var (
-	LogFile = "/var/log/q"
+	LogFile = "q.log"
 )
 
 func Println(a ...interface{}) {
-	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	f := filepath.Join("/tmp", LogFile)
+	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +39,8 @@ func Println(a ...interface{}) {
 }
 
 func Printf(format string, a ...interface{}) {
-	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	f := filepath.Join("/tmp", LogFile)
+	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
