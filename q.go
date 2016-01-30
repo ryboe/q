@@ -9,13 +9,12 @@ import (
 )
 
 var (
-	LogFile = "q.log"
+	LogFile = "/tmp/q.log"
 	mu      sync.Mutex
 )
 
 func Println(a ...interface{}) {
-	f := filepath.Join("/tmp", LogFile)
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -40,8 +39,7 @@ func Println(a ...interface{}) {
 }
 
 func Printf(format string, a ...interface{}) {
-	f := filepath.Join("/tmp", LogFile)
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
