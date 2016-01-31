@@ -26,17 +26,18 @@ func Println(a ...interface{}) {
 	defer fd.Close()
 
 	pc, file, line, ok := runtime.Caller(1)
-	if ok {
-		p := []interface{}{prefix(pc, file, line)}
-		a = append(p, a...)
+	if !ok {
 		mu.Lock()
 		_, err = fmt.Fprintln(fd, a...)
 		mu.Unlock()
-	} else {
-		mu.Lock()
-		_, err = fmt.Fprintln(fd, a...)
-		mu.Unlock()
+		return
 	}
+
+	p := []interface{}{prefix(pc, file, line)}
+	a = append(p, a...)
+	mu.Lock()
+	_, err = fmt.Fprintln(fd, a...)
+	mu.Unlock()
 
 	if err != nil {
 		panic(err) // TODO: don't panic
@@ -52,16 +53,17 @@ func Printf(format string, a ...interface{}) {
 	defer fd.Close()
 
 	pc, file, line, ok := runtime.Caller(1)
-	if ok {
-		p := prefix(pc, file, line)
-		mu.Lock()
-		_, err = fmt.Fprintf(fd, p+" "+format, a...)
-		mu.Unlock()
-	} else {
+	if !ok {
 		mu.Lock()
 		_, err = fmt.Fprintf(fd, format, a...)
 		mu.Unlock()
+		return
 	}
+
+	p := prefix(pc, file, line)
+	mu.Lock()
+	_, err = fmt.Fprintf(fd, p+" "+format, a...)
+	mu.Unlock()
 
 	if err != nil {
 		panic(err) // TODO: don't panic
