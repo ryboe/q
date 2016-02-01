@@ -138,8 +138,8 @@ func qCall(n *ast.CallExpr) bool {
 	return false
 }
 
-// argName returns the variable name of the given argument if it's a variable.
-// If the argument is something else, like a literal or a function call, argName
+// argName returns the name of the given argument if it's a variable. If the
+// argument is something else, like a literal or a function call, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
 	if ident, is := arg.(*ast.Ident); is && ident.Obj.Kind == ast.Var {
