@@ -30,20 +30,16 @@ func Println(a ...interface{}) {
 	defer fd.Close()
 
 	pc, file, line, ok := runtime.Caller(1)
-	if !ok {
-		mu.Lock()
-		_, err = fmt.Fprintln(fd, a...)
-		mu.Unlock()
-		return
+	if ok {
+		argNames, err := argNames(file, line)
+		if err == nil {
+			a = formatArgs(argNames, a...)
+		}
+
+		p := []interface{}{prefix(pc, file, line)}
+		a = append(p, a...)
 	}
 
-	argNames, err := argNames(file, line)
-	if err == nil {
-		a = formatArgs(argNames, a...)
-	}
-
-	p := []interface{}{prefix(pc, file, line)}
-	a = append(p, a...)
 	mu.Lock()
 	_, err = fmt.Fprintln(fd, a...)
 	mu.Unlock()
