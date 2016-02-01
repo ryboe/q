@@ -1,7 +1,6 @@
 package q
 
 import (
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -108,7 +107,7 @@ func argNames(file string, line int) ([]string, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, file, nil, 0)
 	if err != nil {
-		return nil, errors.New("failed to parse source file: " + file)
+		return nil, err
 	}
 
 	var names []string
