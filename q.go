@@ -40,6 +40,7 @@ func Println(a ...interface{}) {
 		a = append(p, a...)
 	}
 
+	a = append(a, "\n")
 	mu.Lock()
 	_, err = fmt.Fprintln(fd, a...)
 	mu.Unlock()
