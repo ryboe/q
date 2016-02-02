@@ -1,4 +1,4 @@
-package q
+package qq
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	LogFile = "q.log"
+	LogFile = "qq.log"
 	mu      sync.Mutex
 )
 
