@@ -111,7 +111,8 @@ func argNames(file string, line int) ([]string, error) {
 
 	var names []string
 	ast.Inspect(f, func(n ast.Node) bool {
-		if call, is := n.(*ast.CallExpr); !is {
+		call, is := n.(*ast.CallExpr)
+		if !is {
 			return true
 		}
 
