@@ -21,7 +21,7 @@ func Println(a ...interface{}) {
 	f := filepath.Join(os.TempDir(), LogFile)
 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		// TODO: don't panic. people will forget and leave q.Print() calls in
+		// TODO: don't panic. people will forget and leave qq.Print() calls in
 		// their code, which will end up in prod. we don't want to crash the
 		// server because we don't have permissions to write to /tmp.
 		panic(err)
@@ -97,10 +97,10 @@ func formatArgs(names []string, values []interface{}) []interface{} {
 	return values
 }
 
-// argNames returns the names of all the variable arguments for the q.Print*()
+// argNames returns the names of all the variable arguments for the qq.Print*()
 // call at the given file and line number. If the argument is not a variable,
 // the slice will contain an empty string at the index position for that
-// argument. For example, q.Print(a, 123) will result in []string{"a", ""}
+// argument. For example, qq.Print(a, 123) will result in []string{"a", ""}
 // for arg names, because 123 is not a variable name.
 func argNames(file string, line int) ([]string, error) {
 	fset := token.NewFileSet()
@@ -120,7 +120,7 @@ func argNames(file string, line int) ([]string, error) {
 			return true
 		}
 
-		if !qCall(call) {
+		if !qqCall(call) {
 			return true
 		}
 
@@ -133,9 +133,9 @@ func argNames(file string, line int) ([]string, error) {
 	return names, nil
 }
 
-// qCall returns true if the given function call expression is for a function in
-// the q package, e.g. q.Printf().
-func qCall(n *ast.CallExpr) bool {
+// qqCall returns true if the given function call expression is for a function
+// in the qq package, e.g. qq.Printf().
+func qqCall(n *ast.CallExpr) bool {
 	sel, is := n.Fun.(*ast.SelectorExpr)
 	if !is {
 		return false
@@ -146,7 +146,7 @@ func qCall(n *ast.CallExpr) bool {
 		return false
 	}
 
-	return ident.Name == "q"
+	return ident.Name == "qq"
 }
 
 // argName returns the name of the given argument if it's a variable. If the
