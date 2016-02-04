@@ -30,9 +30,9 @@ func Println(a ...interface{}) {
 
 	pc, file, line, ok := runtime.Caller(1)
 	if ok {
-		argNames, err := argNames(file, line)
+		names, err := argNames(file, line)
 		if err == nil {
-			a = formatArgs(argNames, a...)
+			a = formatArgs(names, a)
 		}
 
 		p := []interface{}{prefix(pc, file, line)}
@@ -84,18 +84,17 @@ func prefix(pc uintptr, file string, line int) string {
 }
 
 // formatArgs turns a slice of arguments into pretty-printed strings. If the
-// argument variable name is present in argNames, it will be returned as a
+// argument variable name is present in names, it will be returned as a
 // name=value string, e.g. "port=443".
-func formatArgs(argNames []string, a ...interface{}) []interface{} {
-	for i := 0; i < len(a); i++ {
-		var namePrefix string
-		if argNames[i] != "" {
-			namePrefix = argNames[i] + "="
+func formatArgs(names []string, values []interface{}) []interface{} {
+	for i := 0; i < len(values); i++ {
+		if names[i] == "" {
+			values[i] = fmt.Sprintf("%#v", values[i])
+		} else {
+			values[i] = fmt.Sprintf("%s=%#v", names[i], values[i])
 		}
-
-		a[i] = namePrefix + fmt.Sprintf("%#v", a[i])
 	}
-	return a
+	return values
 }
 
 // argNames returns the names of all the variable arguments for the q.Print*()
@@ -112,13 +111,20 @@ func argNames(file string, line int) ([]string, error) {
 
 	var names []string
 	ast.Inspect(f, func(n ast.Node) bool {
-		// if this is a function call on the expected line number
-		if call, is := n.(*ast.CallExpr); is && fset.Position(call.End()).Line == line {
-			if qCall(call) {
-				for _, arg := range call.Args {
-					names = append(names, argName(arg))
-				}
-			}
+		if call, is := n.(*ast.CallExpr); !is {
+			return true
+		}
+
+		if fset.Position(call.End()).Line != line {
+			return true
+		}
+
+		if !qCall(call) {
+			return true
+		}
+
+		for _, arg := range call.Args {
+			names = append(names, argName(arg))
 		}
 		return true
 	})
@@ -129,20 +135,31 @@ func argNames(file string, line int) ([]string, error) {
 // qCall returns true if the given function call expression is for a function in
 // the q package, e.g. q.Printf().
 func qCall(n *ast.CallExpr) bool {
-	if sel, is := n.Fun.(*ast.SelectorExpr); is {
-		if ident, is := sel.X.(*ast.Ident); is && ident.Name == "q" {
-			return true
-		}
+	sel, is := n.Fun.(*ast.SelectorExpr)
+	if !is {
+		return false
 	}
-	return false
+
+	ident, is := sel.X.(*ast.Ident)
+	if !is {
+		return false
+	}
+
+	return ident.Name == "q"
 }
 
 // argName returns the name of the given argument if it's a variable. If the
 // argument is something else, like a literal or a function call, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
-	if ident, is := arg.(*ast.Ident); is && ident.Obj.Kind == ast.Var {
-		return ident.Obj.Name
+	ident, is := arg.(*ast.Ident)
+	if !is {
+		return ""
 	}
-	return ""
+
+	if ident.Obj.Kind != ast.Var {
+		return ""
+	}
+
+	return ident.Obj.Name
 }
