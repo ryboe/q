@@ -21,9 +21,6 @@ func Println(a ...interface{}) {
 	f := filepath.Join(os.TempDir(), LogFile)
 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		// TODO: don't panic. people will forget and leave qq.Print() calls in
-		// their code, which will end up in prod. we don't want to crash the
-		// server because we don't have permissions to write to /tmp.
 		panic(err)
 	}
 	defer fd.Close()
@@ -45,7 +42,7 @@ func Println(a ...interface{}) {
 	mu.Unlock()
 
 	if err != nil {
-		panic(err) // TODO: don't panic
+		panic(err)
 	}
 }
 
@@ -53,7 +50,7 @@ func Printf(format string, a ...interface{}) {
 	f := filepath.Join(os.TempDir(), LogFile)
 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		panic(err) // TODO: don't panic
+		panic(err)
 	}
 	defer fd.Close()
 
@@ -71,7 +68,7 @@ func Printf(format string, a ...interface{}) {
 	mu.Unlock()
 
 	if err != nil {
-		panic(err) // TODO: don't panic
+		panic(err)
 	}
 }
 
