@@ -105,14 +105,19 @@ func prefix(pc uintptr, file string, line int) string {
 }
 
 // formatArgs turns a slice of arguments into pretty-printed strings. If the
-// argument variable name is present in names, it will be returned as a
-// name=value string, e.g. "port=443".
+// argument is a variable or an expression, it will be returned as a
+// name=value string, e.g. "port=443", "3+2=5". Variable names, expressions, and
+// values are colorized using ANSI escape codes.
 func formatArgs(names []string, values []interface{}) []interface{} {
 	for i := 0; i < len(values); i++ {
+		v := fmt.Sprintf("%#v", values[i])
+		colorizedVal := cyan + v + endColor
 		if names[i] == "" {
-			values[i] = fmt.Sprintf("%#v", values[i])
+			// arg is a literal
+			values[i] = colorizedVal
 		} else {
-			values[i] = fmt.Sprintf("%s=%#v", names[i], values[i])
+			colorizedName := bold + names[i] + endColor
+			values[i] = fmt.Sprintf("%s=%s", colorizedName, colorizedVal)
 		}
 	}
 	return values
@@ -170,18 +175,33 @@ func qqCall(n *ast.CallExpr) bool {
 	return ident.Name == "qq"
 }
 
+// exprString returns the source text underlying the given ast.Expr.
+func exprString(arg ast.Expr) string {
+	var buf bytes.Buffer
+	fset := token.NewFileSet()
+	printer.Fprint(&buf, fset, arg)
+	return buf.String() // returns empty string if printer fails
+}
+
 // argName returns the name of the given argument if it's a variable. If the
 // argument is something else, like a literal or a function call, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
-	ident, is := arg.(*ast.Ident)
-	if !is {
-		return ""
+	var name string
+	switch a := arg.(type) {
+	case *ast.Ident:
+		if a.Obj.Kind == ast.Var {
+			name = a.Obj.Name
+		}
+	case *ast.BinaryExpr,
+		*ast.CallExpr,
+		*ast.IndexExpr,
+		*ast.KeyValueExpr,
+		*ast.ParenExpr,
+		*ast.SliceExpr,
+		*ast.TypeAssertExpr,
+		*ast.UnaryExpr:
+		name = exprString(arg)
 	}
-
-	if ident.Obj.Kind != ast.Var {
-		return ""
-	}
-
-	return ident.Obj.Name
+	return name
 }
