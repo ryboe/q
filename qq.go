@@ -1,30 +1,50 @@
 package qq
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"time"
 )
 
-var (
-	LogFile = "qq.log"
-	mu      sync.Mutex
+const (
+	bold     = "\033[1m"
+	yellow   = "\033[33m"
+	cyan     = "\033[36m"
+	endColor = "\033[0m" // ANSI escape code for "reset everything"
 )
 
-func Println(a ...interface{}) {
-	f := filepath.Join(os.TempDir(), LogFile)
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+var (
+	// LogFile is the full path to the qq.log file.
+	LogFile string
+	logger  *log.Logger
+)
+
+func init() {
+	LogFile = filepath.Join(os.TempDir(), "qq.log")
+
+	// init with stderr. will be replaced with qq.log on every print.
+	// this is necessary so log file can be properly closed after printing.
+	logger = log.New(os.Stderr, "", 0)
+}
+
+func openLog() *os.File {
+	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
-	defer fd.Close()
+	return fd
+}
 
+func Log(a ...interface{}) {
+	// get info about parent func calling qq.Log()
 	pc, file, line, ok := runtime.Caller(1)
 	if ok {
 		names, err := argNames(file, line)
@@ -32,52 +52,56 @@ func Println(a ...interface{}) {
 			a = formatArgs(names, a)
 		}
 
-		p := []interface{}{prefix(pc, file, line)}
-		a = append(p, a...)
+		logger.SetPrefix(prefix(pc, file, line))
 	}
+	a = append(a, "\n") // extra space between logs
 
-	a = append(a, "\n")
-	mu.Lock()
-	_, err = fmt.Fprintln(fd, a...)
-	mu.Unlock()
-
-	if err != nil {
-		panic(err)
-	}
+	l := openLog()
+	defer l.Close()
+	logger.SetOutput(l)
+	logger.Println(a...)
 }
 
-func Printf(format string, a ...interface{}) {
-	f := filepath.Join(os.TempDir(), LogFile)
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-	defer fd.Close()
+// func Print(a ...interface{}) {
 
-	pc, file, line, ok := runtime.Caller(1)
-	if !ok {
-		mu.Lock()
-		_, err = fmt.Fprintf(fd, format, a...)
-		mu.Unlock()
-		return
-	}
+// }
 
-	p := prefix(pc, file, line)
-	mu.Lock()
-	_, err = fmt.Fprintf(fd, p+" "+format, a...)
-	mu.Unlock()
+// func Println(a ...interface{}) {
 
-	if err != nil {
-		panic(err)
-	}
-}
+// }
+
+// func Printf(format string, a ...interface{}) {
+// 	f := filepath.Join(os.TempDir(), LogFile)
+// 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer fd.Close()
+
+// 	pc, file, line, ok := runtime.Caller(1)
+// 	if !ok {
+// 		mu.Lock()
+// 		defer mu.Unlock()
+// 		_, err = fmt.Fprintf(fd, format, a...)
+// 		return
+// 	}
+
+// 	p := prefix(pc, file, line)
+// 	mu.Lock()
+// 	defer mu.Unlock()
+// 	_, err = fmt.Fprintf(fd, p+" "+format, a...)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
 
 func prefix(pc uintptr, file string, line int) string {
 	t := time.Now().Format("15:04:05")
 	shortFile := filepath.Base(file)
 	callerName := runtime.FuncForPC(pc).Name()
 
-	return fmt.Sprintf("[%s %s:%d %s]", t, shortFile, line, callerName)
+	return fmt.Sprintf("[%s %s:%d %s] ", t, shortFile, line, callerName)
 }
 
 // formatArgs turns a slice of arguments into pretty-printed strings. If the
