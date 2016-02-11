@@ -139,7 +139,7 @@ func argNames(file string, line int) ([]string, error) {
 	ast.Inspect(f, func(n ast.Node) bool {
 		call, is := n.(*ast.CallExpr)
 		if !is {
-			return true
+			return true // visit next node
 		}
 
 		if fset.Position(call.End()).Line != line {
@@ -159,8 +159,8 @@ func argNames(file string, line int) ([]string, error) {
 	return names, nil
 }
 
-// qqCall returns true if the given function call expression is for a function
-// in the qq package, e.g. qq.Printf().
+// qqCall returns true if the given function call expression is for a qq
+// function, e.g. qq.Log().
 func qqCall(n *ast.CallExpr) bool {
 	sel, is := n.Fun.(*ast.SelectorExpr)
 	if !is {
