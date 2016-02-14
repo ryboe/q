@@ -14,11 +14,13 @@ import (
 	"time"
 )
 
+type color string
+
 const (
-	bold     = "\033[1m"
-	yellow   = "\033[33m"
-	cyan     = "\033[36m"
-	endColor = "\033[0m" // ANSI escape code for "reset everything"
+	bold     color = "\033[1m"
+	yellow   color = "\033[33m"
+	cyan     color = "\033[36m"
+	endColor color = "\033[0m" // ANSI escape code for "reset everything"
 )
 
 var (
