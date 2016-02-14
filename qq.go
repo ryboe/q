@@ -54,7 +54,11 @@ func Log(a ...interface{}) {
 	if wasRunning := timer.Reset(2 * time.Second); !wasRunning {
 		logger.SetPrefix("\n" + logger.Prefix())
 	}
-	return values
+
+	f := openLog()
+	defer f.Close()
+	logger.SetOutput(f)
+	logger.Println(a...)
 }
 
 // argNames finds the qq.Log() call at the given filename/line number and
