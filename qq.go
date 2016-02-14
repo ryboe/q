@@ -133,7 +133,60 @@ func argName(arg ast.Expr) string {
 		*ast.SliceExpr,
 		*ast.TypeAssertExpr,
 		*ast.UnaryExpr:
-		name = exprString(arg)
+		name = exprToString(arg)
 	}
 	return name
+}
+
+// exprToString returns the source text underlying the given ast.Expr.
+func exprToString(arg ast.Expr) string {
+	var buf bytes.Buffer
+	fset := token.NewFileSet()
+	printer.Fprint(&buf, fset, arg)
+	return buf.String() // returns empty string if printer fails
+}
+
+// TODO: scrap this prefix and just use the timer value
+func prefix(pc uintptr, file string, line int) string {
+	t := time.Now().Format("15:04:05")
+	shortFile := filepath.Base(file)
+	callerName := runtime.FuncForPC(pc).Name()
+
+	return fmt.Sprintf("[%s %s:%d %s] ", t, shortFile, line, callerName)
+}
+
+// openLog returns a file descriptor for the qq.log file.
+func openLog() *os.File {
+	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+	return fd
+}
+
+// formatArgs turns a slice of arguments into pretty-printed strings. If the
+// argument is a variable or an expression, it will be returned as a
+// name=value string, e.g. "port=443", "3+2=5". Variable names, expressions, and
+// values are colorized using ANSI escape codes.
+func formatArgs(names []string, values []interface{}) []interface{} {
+	formatted := make([]interface{}, len(values))
+	for i := 0; i < len(values); i++ {
+		val := fmt.Sprintf("%#v", values[i])
+		val = colorize(val, cyan)
+
+		if names[i] == "" {
+			// arg is a literal
+			formatted[i] = val
+		} else {
+			name := colorize(names[i], bold)
+			formatted[i] = fmt.Sprintf("%s=%s", name, val)
+		}
+	}
+	return formatted
+}
+
+// colorize returns the given text encapsulated in ANSI escape codes that
+// give the text a color in the terminal.
+func colorize(text string, c color) string {
+	return string(c) + text + string(endColor)
 }
