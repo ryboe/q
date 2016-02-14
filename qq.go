@@ -25,25 +25,15 @@ const (
 
 var (
 	// LogFile is the full path to the qq.log file.
-	LogFile string
-	logger  *log.Logger
-)
-
-func init() {
 	LogFile = filepath.Join(os.TempDir(), "qq.log")
 
 	// init with stderr. will be replaced with qq.log on every print.
 	// this is necessary so log file can be properly closed after printing.
 	logger = log.New(os.Stderr, "", 0)
-}
 
-func openLog() *os.File {
-	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-	return fd
-}
+	// for grouping log messages by time of write
+	timer = time.NewTimer(0)
+)
 
 func Log(a ...interface{}) {
 	// get info about parent func calling qq.Log()
