@@ -68,7 +68,7 @@ func Log(a ...interface{}) {
 // err will be non-nil if the source text cannot be parsed.
 func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, file, nil, 0)
+	f, err := parser.ParseFile(fset, filename, nil, 0)
 	if err != nil {
 		return nil, err
 	}
