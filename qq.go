@@ -49,71 +49,10 @@ func Log(a ...interface{}) {
 
 		logger.SetPrefix(prefix(pc, file, line))
 	}
-	a = append(a, "\n") // extra space between logs
 
-	l := openLog()
-	defer l.Close()
-	logger.SetOutput(l)
-	logger.Println(a...)
-}
-
-// func Print(a ...interface{}) {
-
-// }
-
-// func Println(a ...interface{}) {
-
-// }
-
-// func Printf(format string, a ...interface{}) {
-// 	f := filepath.Join(os.TempDir(), LogFile)
-// 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer fd.Close()
-
-// 	pc, file, line, ok := runtime.Caller(1)
-// 	if !ok {
-// 		mu.Lock()
-// 		defer mu.Unlock()
-// 		_, err = fmt.Fprintf(fd, format, a...)
-// 		return
-// 	}
-
-// 	p := prefix(pc, file, line)
-// 	mu.Lock()
-// 	defer mu.Unlock()
-// 	_, err = fmt.Fprintf(fd, p+" "+format, a...)
-
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
-func prefix(pc uintptr, file string, line int) string {
-	t := time.Now().Format("15:04:05")
-	shortFile := filepath.Base(file)
-	callerName := runtime.FuncForPC(pc).Name()
-
-	return fmt.Sprintf("[%s %s:%d %s] ", t, shortFile, line, callerName)
-}
-
-// formatArgs turns a slice of arguments into pretty-printed strings. If the
-// argument is a variable or an expression, it will be returned as a
-// name=value string, e.g. "port=443", "3+2=5". Variable names, expressions, and
-// values are colorized using ANSI escape codes.
-func formatArgs(names []string, values []interface{}) []interface{} {
-	for i := 0; i < len(values); i++ {
-		v := fmt.Sprintf("%#v", values[i])
-		colorizedVal := cyan + v + endColor
-		if names[i] == "" {
-			// arg is a literal
-			values[i] = colorizedVal
-		} else {
-			colorizedName := bold + names[i] + endColor
-			values[i] = fmt.Sprintf("%s=%s", colorizedName, colorizedVal)
-		}
+	// line break if more than 2s since last write (groups logs together)
+	if wasRunning := timer.Reset(2 * time.Second); !wasRunning {
+		logger.SetPrefix("\n" + logger.Prefix())
 	}
 	return values
 }
