@@ -27,16 +27,19 @@ var (
 	// LogFile is the full path to the qq.log file.
 	LogFile = filepath.Join(os.TempDir(), "qq.log")
 
-	// init with stderr. will be replaced with qq.log on every print.
-	// this is necessary so log file can be properly closed after printing.
+	// set logger to output to stderr on init, but it will be replaced with
+	// qq.log file when Log() is called. we have to open/close qq.log inside
+	// every Log() call because it's the only way ensure qq.log is properly
+	// closed.
 	logger = log.New(os.Stderr, "", 0)
 
 	// for grouping log messages by time of write
 	timer = time.NewTimer(0)
 )
 
+// TODO: function comment here
 func Log(a ...interface{}) {
-	// get info about parent func calling qq.Log()
+	// get info about the func calling qq.Log()
 	pc, file, line, ok := runtime.Caller(1)
 	if ok {
 		names, err := argNames(file, line)
@@ -115,12 +118,12 @@ func formatArgs(names []string, values []interface{}) []interface{} {
 	return values
 }
 
-// argNames returns the names of all the variable arguments for the qq.Print*()
-// call at the given file and line number. If the argument is not a variable,
-// the slice will contain an empty string at the index position for that
-// argument. For example, qq.Print(a, 123) will result in []string{"a", ""}
-// for arg names, because 123 is not a variable name.
-func argNames(file string, line int) ([]string, error) {
+// argNames finds the qq.Log() call at the given filename/line number and
+// returns its arguments as a slice of strings. If the argument is a literal,
+// argNames will return an empty string at the index position of that argument.
+// For example, qq.Log(ip, port, 5432) would return []string{"ip", "port", ""}.
+// err will be non-nil if the source text cannot be parsed.
+func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, file, nil, 0)
 	if err != nil {
@@ -134,10 +137,12 @@ func argNames(file string, line int) ([]string, error) {
 			return true // visit next node
 		}
 
+		// is a function call, but on wrong line
 		if fset.Position(call.End()).Line != line {
 			return true
 		}
 
+		// is a function call on correct line, but not a qq function
 		if !qqCall(call) {
 			return true
 		}
@@ -154,12 +159,12 @@ func argNames(file string, line int) ([]string, error) {
 // qqCall returns true if the given function call expression is for a qq
 // function, e.g. qq.Log().
 func qqCall(n *ast.CallExpr) bool {
-	sel, is := n.Fun.(*ast.SelectorExpr)
+	sel, is := n.Fun.(*ast.SelectorExpr) // example of SelectorExpr: a.B()
 	if !is {
 		return false
 	}
 
-	ident, is := sel.X.(*ast.Ident)
+	ident, is := sel.X.(*ast.Ident) // sel.X is
 	if !is {
 		return false
 	}
@@ -167,16 +172,8 @@ func qqCall(n *ast.CallExpr) bool {
 	return ident.Name == "qq"
 }
 
-// exprString returns the source text underlying the given ast.Expr.
-func exprString(arg ast.Expr) string {
-	var buf bytes.Buffer
-	fset := token.NewFileSet()
-	printer.Fprint(&buf, fset, arg)
-	return buf.String() // returns empty string if printer fails
-}
-
-// argName returns the name of the given argument if it's a variable. If the
-// argument is something else, like a literal or a function call, argName
+// argName returns the source text of the given argument if it's a variable or
+// an expression. If the argument is something else, like a literal, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
 	var name string
