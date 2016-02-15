@@ -11,7 +11,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
+
+	"github.com/y0ssar1an/qq/internal/safetime"
 )
 
 type color string
@@ -27,38 +30,113 @@ var (
 	// LogFile is the full path to the qq.log file.
 	LogFile = filepath.Join(os.TempDir(), "qq.log")
 
+	// Writes that occur after LogGroupInterval has elapsed since the last
+	// write are preceded by a line break (default: 2s).
+	LogGroupInterval = 2 * time.Second
+
 	// set logger to output to stderr on init, but it will be replaced with
-	// qq.log file when Log() is called. we have to open/close qq.log inside
-	// every Log() call because it's the only way ensure qq.log is properly
-	// closed.
+	// qq.log file when Log() is called.
 	logger = log.New(os.Stderr, "", 0)
 
-	// for grouping log messages by time of write
-	timer = time.NewTimer(0)
+	// concurrency safe
+	start = safetime.New()
+	timer = safetime.NewTimer(0)
+
+	// file and func name of last qq.Log() caller. determines if new header line
+	// needs to be printed
+	mu       sync.Mutex
+	lastFile string
+	lastFunc string
 )
+
+func init() {
+	timer.Stop() // can't init timer in stopped state. must stop manually
+}
 
 // TODO: function comment here
 func Log(a ...interface{}) {
-	// get info about the func calling qq.Log()
-	pc, file, line, ok := runtime.Caller(1)
-	if ok {
-		names, err := argNames(file, line)
-		if err == nil {
-			a = formatArgs(names, a)
-		}
-
-		logger.SetPrefix(prefix(pc, file, line))
+	// will print line break if more than 2s since last write (groups logs)
+	timerExpired := !timer.Reset(LogGroupInterval)
+	if timerExpired {
+		start.SetNow() // set new start time to now
 	}
 
-	// line break if more than 2s since last write (groups logs together)
-	if wasRunning := timer.Reset(2 * time.Second); !wasRunning {
-		logger.SetPrefix("\n" + logger.Prefix())
-	}
-
+	// must open/close qq.log inside every Log() call because it's only way
+	// to ensure qq.log is properly closed
 	f := openLog()
 	defer f.Close()
 	logger.SetOutput(f)
+
+	// get info about func calling qq.Log()
+	pc, filename, line, ok := runtime.Caller(1)
+	if !ok {
+		logger.Println() // separate from previous group
+		writeLog(a...)   // no fancy printing :(
+		return
+	}
+
+	// print header if necessary, e.g. [14:00:36 main.go main.main]
+	funcName := runtime.FuncForPC(pc).Name()
+	funcChanged := setLastFunc(funcName)
+	fileChanged := setLastFile(filename)
+	if funcChanged || fileChanged || timerExpired {
+		logger.Println(header(filename, funcName))
+	}
+
+	// extract arg names from text between parens in qq.Log()
+	names, err := argNames(filename, line)
+	if err != nil {
+		writeLog(a...) // no fancy printing :(
+		return
+	}
+
+	// colorize names and values. convert values to %#v strings
+	a = formatArgs(names, a)
+	writeLog(a...)
+}
+
+// openLog returns a file descriptor for the qq.log file. openLog will panic
+// if it cannot open qq.log.
+func openLog() *os.File {
+	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+	return fd
+}
+
+func writeLog(a ...interface{}) {
+	timestamp := timeSinceStart()
+	timestamp = colorize(timestamp, yellow)
+	a = append([]interface{}{timestamp}, a...)
 	logger.Println(a...)
+}
+
+func timeSinceStart() string {
+	return fmt.Sprintf("%.3fs", safetime.Since(start).Seconds())
+}
+
+func setLastFunc(funcName string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+	changed := funcName != lastFunc
+	lastFunc = funcName
+	return changed
+}
+
+func setLastFile(filename string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+	changed := filename != lastFile
+	lastFile = filename
+	return changed
+}
+
+// TODO: function comment here
+func header(filename, funcName string) string {
+	shortFile := filepath.Base(filename)
+	t := time.Now().Format("15:04:05")
+	return fmt.Sprintf("\n[%s %s %s]", t, shortFile, funcName)
 }
 
 // argNames finds the qq.Log() call at the given filename/line number and
@@ -144,24 +222,6 @@ func exprToString(arg ast.Expr) string {
 	fset := token.NewFileSet()
 	printer.Fprint(&buf, fset, arg)
 	return buf.String() // returns empty string if printer fails
-}
-
-// TODO: scrap this prefix and just use the timer value
-func prefix(pc uintptr, file string, line int) string {
-	t := time.Now().Format("15:04:05")
-	shortFile := filepath.Base(file)
-	callerName := runtime.FuncForPC(pc).Name()
-
-	return fmt.Sprintf("[%s %s:%d %s] ", t, shortFile, line, callerName)
-}
-
-// openLog returns a file descriptor for the qq.log file.
-func openLog() *os.File {
-	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-	return fd
 }
 
 // formatArgs turns a slice of arguments into pretty-printed strings. If the
