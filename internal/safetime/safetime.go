@@ -10,13 +10,7 @@ type Time struct {
 	tm time.Time
 }
 
-func New() *Time {
-	return &Time{sync.Mutex{}, time.Time{}}
-}
-
-func Since(t *Time) time.Duration {
-	t.Lock()
-	defer t.Unlock()
+func Since(t Time) time.Duration {
 	return time.Now().Sub(t.tm)
 }
 

@@ -39,7 +39,7 @@ var (
 	logger = log.New(os.Stderr, "", 0)
 
 	// concurrency safe
-	start = safetime.New()
+	start safetime.Time
 	timer = safetime.NewTimer(0)
 
 	// file and func name of last qq.Log() caller. determines if new header line
