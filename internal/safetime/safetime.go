@@ -22,21 +22,21 @@ func (t *Time) SetNow() {
 
 type Timer struct {
 	sync.Mutex
-	time.Timer
+	t *time.Timer
 }
 
 func NewTimer(d time.Duration) *Timer {
-	return &Timer{sync.Mutex{}, *time.NewTimer(d)}
+	return &Timer{sync.Mutex{}, time.NewTimer(d)}
 }
 
 func (tmr *Timer) Reset(d time.Duration) bool {
 	tmr.Lock()
 	defer tmr.Unlock()
-	return tmr.Reset(d)
+	return tmr.t.Reset(d)
 }
 
 func (tmr *Timer) Stop() bool {
 	tmr.Lock()
 	defer tmr.Unlock()
-	return tmr.Stop()
+	return tmr.t.Stop()
 }
