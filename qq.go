@@ -7,14 +7,11 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
-
-	"github.com/y0ssar1an/qq/internal/safetime"
 )
 
 type color string
@@ -24,119 +21,135 @@ const (
 	yellow   color = "\033[33m"
 	cyan     color = "\033[36m"
 	endColor color = "\033[0m" // ANSI escape code for "reset everything"
+
+	DefaultGroupInterval = 2 * time.Second
 )
 
-var (
-	// LogFile is the full path to the qq.log file.
-	LogFile = filepath.Join(os.TempDir(), "qq.log")
-
-	// Writes that occur after LogGroupInterval has elapsed since the last
-	// write are preceded by a line break (default: 2s).
-	LogGroupInterval = 2 * time.Second
-
-	// set logger to output to stderr on init, but it will be replaced with
-	// qq.log file when Log() is called.
-	logger = log.New(os.Stderr, "", 0)
-
-	// concurrency safe
-	start safetime.Time
-	timer = safetime.NewTimer(0)
-
-	// file and func name of last qq.Log() caller. determines if new header line
-	// needs to be printed
-	mu       sync.Mutex
-	lastFile string
-	lastFunc string
-)
-
-func init() {
-	timer.Stop() // can't init timer in stopped state. must stop manually
+type Logger struct {
+	mu            sync.Mutex
+	path          string
+	groupInterval time.Duration // for grouping log messages with line breaks
+	start         time.Time
+	timer         *time.Timer
+	lastFile      string // for determining when to print header
+	lastFunc      string
 }
 
-// TODO: function comment here
-func Log(a ...interface{}) {
-	// will print line break if more than 2s since last write (groups logs)
-	timerExpired := !timer.Reset(LogGroupInterval)
-	if timerExpired {
-		start.SetNow() // set new start time to now
+// TODO: implement flag that controls what gets printed in the header
+func New(path string, groupInterval time.Duration) *Logger {
+	if groupInterval < 0 {
+		groupInterval = DefaultGroupInterval
 	}
 
-	// must open/close qq.log inside every Log() call because it's only way
-	// to ensure qq.log is properly closed
-	f := openLog()
-	defer f.Close()
-	logger.SetOutput(f)
+	t := time.NewTimer(0)
+	t.Stop()
+
+	return &Logger{
+		path:          path,
+		groupInterval: groupInterval,
+		timer:         t,
+	}
+}
+
+func (l *Logger) Log(a ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	// will print line break if more than groupInterval since last write (groups
+	// logs together)
+	timerExpired := !l.timer.Reset(l.groupInterval)
+	if timerExpired {
+		l.start = time.Now()
+	}
 
 	// get info about func calling qq.Log()
 	pc, filename, line, ok := runtime.Caller(1)
 	if !ok {
-		logger.Println() // separate from previous group
-		writeLog(a...)   // no fancy printing :(
+		l.Output(a...) // no fancy printing :(
 		return
 	}
 
 	// print header if necessary, e.g. [14:00:36 main.go main.main]
 	funcName := runtime.FuncForPC(pc).Name()
-	funcChanged := setLastFunc(funcName)
-	fileChanged := setLastFile(filename)
-	if funcChanged || fileChanged || timerExpired {
-		logger.Println(header(filename, funcName))
+	if timerExpired || funcName != l.lastFunc || filename != l.lastFile {
+		l.lastFunc = funcName
+		l.lastFile = filename
+		l.printHeader()
 	}
 
 	// extract arg names from text between parens in qq.Log()
 	names, err := argNames(filename, line)
 	if err != nil {
-		writeLog(a...) // no fancy printing :(
+		l.Output(a...) // no fancy printing :(
 		return
 	}
 
 	// colorize names and values. convert values to %#v strings
 	a = formatArgs(names, a)
-	writeLog(a...)
+	l.Output(a...)
 }
 
-// openLog returns a file descriptor for the qq.log file. openLog will panic
-// if it cannot open qq.log.
-func openLog() *os.File {
-	fd, err := os.OpenFile(LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+func (l *Logger) Path() string {
+	return l.path
+}
+
+// open returns a file descriptor for the log file at l.path, creating it if it
+// doesn't exist. open will panic if it can't open the file.
+func (l *Logger) open() *os.File {
+	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
-	return fd
+	return f
 }
 
-func writeLog(a ...interface{}) {
-	timestamp := timeSinceStart()
+func (l *Logger) Output(a ...interface{}) {
+	f := l.open()
+	defer f.Close()
+	timestamp := fmt.Sprintf("%.3fs", time.Since(start).Seconds())
 	timestamp = colorize(timestamp, yellow)
 	a = append([]interface{}{timestamp}, a...)
-	logger.Println(a...)
+	fmt.Fprintln(f, a...)
 }
 
-func timeSinceStart() string {
-	return fmt.Sprintf("%.3fs", safetime.Since(start).Seconds())
+func (l *Logger) printHeader(header string) {
+	f := l.open()
+	defer f.Close()
+	shortFile := filepath.Base(std.lastFile)
+	t := time.Now().Format("15:04:05")
+	fmt.Fprintf(f, "\n[%s %s %s]\n", t, shortFile, std.lastFunc)
 }
 
-func setLastFunc(funcName string) bool {
-	mu.Lock()
-	defer mu.Unlock()
-	changed := funcName != lastFunc
-	lastFunc = funcName
-	return changed
-}
+var std = New(filepath.Join(os.TempDir(), "qq.log"), DefaultGroupInterval)
 
-func setLastFile(filename string) bool {
-	mu.Lock()
-	defer mu.Unlock()
-	changed := filename != lastFile
-	lastFile = filename
-	return changed
-}
+// // LogFile is the full path to the qq.log file.
+// LogFile = filepath.Join(os.TempDir(), "qq.log")
+
+// // Writes that occur after LogGroupInterval has elapsed since the last
+// // write are preceded by a line break (default: 2s).
+// LogGroupInterval = 2 * time.Second
+
+// // set logger to output to stderr on init, but it will be replaced with
+// // qq.log file when Log() is called.
+// logger = log.New(os.Stderr, "", 0)
+
+// // concurrency safe
+// start safetime.Time
+// timer = safetime.NewTimer(0)
+
+// // file and func name of last qq.Log() caller. determines if new header line
+// // needs to be printed
+// mu       sync.Mutex
+// lastFile string
+// lastFunc string
 
 // TODO: function comment here
-func header(filename, funcName string) string {
-	shortFile := filepath.Base(filename)
-	t := time.Now().Format("15:04:05")
-	return fmt.Sprintf("\n[%s %s %s]", t, shortFile, funcName)
+func Log(a ...interface{}) {
+	std.Log(a...)
+}
+
+func Path() string {
+	return std.Path()
 }
 
 // argNames finds the qq.Log() call at the given filename/line number and
