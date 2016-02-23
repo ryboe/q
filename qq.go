@@ -245,3 +245,16 @@ func formatArgs(names []string, values []interface{}) []interface{} {
 func colorize(text string, c color) string {
 	return string(c) + text + string(endColor)
 }
+
+// default logger
+var std = New(filepath.Join(os.TempDir(), "qq.log"))
+
+// Log writes a log message through the default logger.
+func Log(a ...interface{}) {
+	std.Log(a...)
+}
+
+// Path returns the full path to the default qq.log file.
+func Path() string {
+	return std.Path()
+}
