@@ -22,48 +22,55 @@ const (
 	cyan     color = "\033[36m"
 	endColor color = "\033[0m" // ANSI escape code for "reset everything"
 
-	DefaultGroupInterval = 2 * time.Second
+	noName = ""
 )
 
+// A Logger writes pretty log messages to a file. Loggers write to files only,
+// not io.Writers. The upside of this restriction is you don't have to open
+// and close log files yourself. Loggers do that for you. Loggers are safe for
+// concurrent use.
 type Logger struct {
-	mu            sync.Mutex
-	path          string
-	groupInterval time.Duration // for grouping log messages with line breaks
-	start         time.Time
-	timer         *time.Timer
-	lastFile      string // for determining when to print header
-	lastFunc      string
+	mu       sync.Mutex
+	path     string
+	start    time.Time
+	timer    *time.Timer
+	lastFile string // for determining when to print header
+	lastFunc string
 }
 
 // TODO: implement flag that controls what gets printed in the header
-func New(path string, groupInterval time.Duration) *Logger {
-	if groupInterval < 0 {
-		groupInterval = DefaultGroupInterval
-	}
 
+// New creates a Logger that writes to the file at the given path.
+func New(path string) *Logger {
 	t := time.NewTimer(0)
 	t.Stop()
 
 	return &Logger{
-		path:          path,
-		groupInterval: groupInterval,
-		timer:         t,
+		path:  path,
+		timer: t,
 	}
 }
 
+// Log pretty-prints the given arguments to the file associated with the Logger.
 func (l *Logger) Log(a ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	// will print line break if more than groupInterval since last write (groups
-	// logs together)
-	timerExpired := !l.timer.Reset(l.groupInterval)
+	// will print line break if more than 2s since last write (groups logs
+	// together)
+	timerExpired := !l.timer.Reset(2 * time.Second)
 	if timerExpired {
 		l.start = time.Now()
 	}
 
 	// get info about func calling qq.Log()
-	pc, filename, line, ok := runtime.Caller(1)
+	var skip int // num levels up the call stack
+	if l == std {
+		skip = 2 // user is calling qq.Log()
+	} else {
+		skip = 1 // user is calling myCustomQQLogger.Log()
+	}
+	pc, filename, line, ok := runtime.Caller(skip)
 	if !ok {
 		l.Output(a...) // no fancy printing :(
 		return
