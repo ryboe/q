@@ -64,13 +64,13 @@ func (l *Logger) Log(a ...interface{}) {
 	}
 
 	// get info about func calling qq.Log()
-	var skip int // num levels up the call stack
+	var callDepth int
 	if l == std {
-		skip = 2 // user is calling qq.Log()
+		callDepth = 2 // user is calling qq.Log()
 	} else {
-		skip = 1 // user is calling myCustomQQLogger.Log()
+		callDepth = 1 // user is calling myCustomQQLogger.Log()
 	}
-	pc, filename, line, ok := runtime.Caller(skip)
+	pc, filename, line, ok := runtime.Caller(callDepth)
 	if !ok {
 		l.Output(a...) // no fancy printing :(
 		return
