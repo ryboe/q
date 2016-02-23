@@ -133,6 +133,12 @@ func (l *Logger) printHeader() {
 	fmt.Fprintf(f, "\n[%s %s %s]\n", t, shortFile, std.lastFunc)
 }
 
+func (l *Logger) SetPath(path string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.path = path
+}
+
 // argNames finds the qq.Log() call at the given filename/line number and
 // returns its arguments as a slice of strings. If the argument is a literal,
 // argNames will return an empty string at the index position of that argument.
@@ -257,4 +263,10 @@ func Log(a ...interface{}) {
 // Path returns the full path to the default qq.log file.
 func Path() string {
 	return std.Path()
+}
+
+// SetPath sets the output destination for the default logger. If the given path
+// is invalid, the next Log() call will panic.
+func SetPath(path string) {
+	std.SetPath(path)
 }
