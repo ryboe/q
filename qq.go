@@ -247,7 +247,7 @@ func formatArgs(names []string, values []interface{}) []interface{} {
 }
 
 // colorize returns the given text encapsulated in ANSI escape codes that
-// give the text a color in the terminal.
+// give the text color in the terminal.
 func colorize(text string, c color) string {
 	return string(c) + text + string(endColor)
 }
