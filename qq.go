@@ -36,7 +36,9 @@ const (
 	cyan     color = "\033[36m"
 	endColor color = "\033[0m" // "reset everything"
 
-	noName = ""
+	noName         = ""
+	timeStampWidth = 6
+	maxLineWidth   = 80
 )
 
 // A Logger writes pretty log messages to a file. Loggers write to files only,
@@ -278,26 +280,42 @@ func exprToString(arg ast.Expr) string {
 	return buf.String() // returns empty string if printer fails
 }
 
-// formatArgs turns a slice of arguments into pretty-printed strings. If the
-// argument is a variable or an expression, it will be returned as a
-// name=value string, e.g. "port=443", "3+2=5". Variable names, expressions, and
-// values are colorized using ANSI escape codes.
+// formatArgs turns argument names and values into pretty-printed strings. If
+// the argument is a variable or an expression, it will be returned as a
+// colorized name=value string, e.g. "port=443", "3+2=5". If the argument is a
+// literal, only the colorized value will be returned. Variable names,
+// expressions, and values are colorized using ANSI escape codes.
 func formatArgs(names []string, values []interface{}) []interface{} {
-	formatted := make([]interface{}, len(values))
-	for i := 0; i < len(values); i++ {
-		val := fmt.Sprintf("%#v", values[i])
-		val = colorize(val, cyan)
+	var formatted []interface{}
+	lineWidth := timeStampWidth
+	for i, v := range values {
+		arg := formatArg(names[i], v)
 
-		if names[i] == noName {
-			// arg is a literal
-			formatted[i] = val
-			continue
+		// break line at 80 chars
+		argWidth := len(arg) + 1 // +1 for trailing space
+		lineWidth += argWidth
+		if lineWidth > maxLineWidth {
+			formatted = append(formatted, "\n      ") // spaces to line up with timestamp
+			lineWidth = argWidth
 		}
 
-		name := colorize(names[i], bold)
-		formatted[i] = fmt.Sprintf("%s=%s", name, val)
+		formatted = append(formatted, arg)
 	}
 	return formatted
+}
+
+// formatArg takes an argument name and value and returns a colorized string,
+// with the value in %#v format.
+func formatArg(name string, value interface{}) string {
+	v := fmt.Sprintf("%#v", value)
+	v = colorize(v, cyan)
+
+	if name == noName {
+		return v // arg is a literal
+	}
+
+	name = colorize(name, bold)
+	return fmt.Sprintf("%s=%s", name, v)
 }
 
 // colorize returns the given text encapsulated in ANSI escape codes that
