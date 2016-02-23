@@ -18,6 +18,9 @@ import (
 type color string
 
 const (
+	// Control what's printed in the header line.
+	// See https://golang.org/pkg/log/#pkg-constants for an explanation of how
+	// these flags work.
 	Ldate = 1 << iota
 	Ltime
 	Lmicroseconds
@@ -27,10 +30,11 @@ const (
 	Lfuncname
 	LstdFlags = Ltime | Lshortfile | Lfuncname
 
+	// ANSI color escape codes
 	bold     color = "\033[1m"
 	yellow   color = "\033[33m"
 	cyan     color = "\033[36m"
-	endColor color = "\033[0m" // ANSI escape code for "reset everything"
+	endColor color = "\033[0m" // "reset everything"
 
 	noName = ""
 )
