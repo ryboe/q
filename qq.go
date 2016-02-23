@@ -84,7 +84,7 @@ func (l *Logger) Log(a ...interface{}) {
 		l.printHeader()
 	}
 
-	// extract arg names from text between parens in qq.Log()
+	// extract arg names from source text between parens in qq.Log()
 	names, err := argNames(filename, line)
 	if err != nil {
 		l.Output(a...) // no fancy printing :(
@@ -96,12 +96,13 @@ func (l *Logger) Log(a ...interface{}) {
 	l.Output(a...)
 }
 
+// Path retuns the full path to the file associated with the Logger.
 func (l *Logger) Path() string {
 	return l.path
 }
 
-// open returns a file descriptor for the log file at l.path, creating it if it
-// doesn't exist. open will panic if it can't open the file.
+// open returns a file descriptor for the file at l.path, creating it if it
+// doesn't exist. It will panic if it can't open the file.
 func (l *Logger) open() *os.File {
 	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
@@ -110,60 +111,33 @@ func (l *Logger) open() *os.File {
 	return f
 }
 
+// Output writes to the log file associated with l. Each log message is
+// prepended with a timestamp.
 func (l *Logger) Output(a ...interface{}) {
-	f := l.open()
-	defer f.Close()
-	timestamp := fmt.Sprintf("%.3fs", time.Since(start).Seconds())
+	timestamp := fmt.Sprintf("%.3fs", time.Since(l.start).Seconds())
 	timestamp = colorize(timestamp, yellow)
 	a = append([]interface{}{timestamp}, a...)
+	f := l.open()
+	defer f.Close()
 	fmt.Fprintln(f, a...)
 }
 
-func (l *Logger) printHeader(header string) {
-	f := l.open()
-	defer f.Close()
+// printHeader prints a header of the form [16:11:18 main.go main.main]. Headers
+// make logs easier to read by reducing redundant information that is normally
+// printed on each line.
+func (l *Logger) printHeader() {
 	shortFile := filepath.Base(std.lastFile)
 	t := time.Now().Format("15:04:05")
+	f := l.open()
+	defer f.Close()
 	fmt.Fprintf(f, "\n[%s %s %s]\n", t, shortFile, std.lastFunc)
-}
-
-var std = New(filepath.Join(os.TempDir(), "qq.log"), DefaultGroupInterval)
-
-// // LogFile is the full path to the qq.log file.
-// LogFile = filepath.Join(os.TempDir(), "qq.log")
-
-// // Writes that occur after LogGroupInterval has elapsed since the last
-// // write are preceded by a line break (default: 2s).
-// LogGroupInterval = 2 * time.Second
-
-// // set logger to output to stderr on init, but it will be replaced with
-// // qq.log file when Log() is called.
-// logger = log.New(os.Stderr, "", 0)
-
-// // concurrency safe
-// start safetime.Time
-// timer = safetime.NewTimer(0)
-
-// // file and func name of last qq.Log() caller. determines if new header line
-// // needs to be printed
-// mu       sync.Mutex
-// lastFile string
-// lastFunc string
-
-// TODO: function comment here
-func Log(a ...interface{}) {
-	std.Log(a...)
-}
-
-func Path() string {
-	return std.Path()
 }
 
 // argNames finds the qq.Log() call at the given filename/line number and
 // returns its arguments as a slice of strings. If the argument is a literal,
 // argNames will return an empty string at the index position of that argument.
 // For example, qq.Log(ip, port, 5432) would return []string{"ip", "port", ""}.
-// err will be non-nil if the source text cannot be parsed.
+// argNames returns a non-nil error if the source text cannot be parsed.
 func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, 0)
@@ -200,12 +174,12 @@ func argNames(filename string, line int) ([]string, error) {
 // qqCall returns true if the given function call expression is for a qq
 // function, e.g. qq.Log().
 func qqCall(n *ast.CallExpr) bool {
-	sel, is := n.Fun.(*ast.SelectorExpr) // example of SelectorExpr: a.B()
+	sel, is := n.Fun.(*ast.SelectorExpr) // SelectorExpr example: a.B()
 	if !is {
 		return false
 	}
 
-	ident, is := sel.X.(*ast.Ident) // sel.X is
+	ident, is := sel.X.(*ast.Ident) // sel.X is the part that precedes the .
 	if !is {
 		return false
 	}
