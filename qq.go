@@ -228,13 +228,14 @@ func formatArgs(names []string, values []interface{}) []interface{} {
 		val := fmt.Sprintf("%#v", values[i])
 		val = colorize(val, cyan)
 
-		if names[i] == "" {
+		if names[i] == noName {
 			// arg is a literal
 			formatted[i] = val
-		} else {
-			name := colorize(names[i], bold)
-			formatted[i] = fmt.Sprintf("%s=%s", name, val)
+			continue
 		}
+
+		name := colorize(names[i], bold)
+		formatted[i] = fmt.Sprintf("%s=%s", name, val)
 	}
 	return formatted
 }
