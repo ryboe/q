@@ -30,12 +30,12 @@ const (
 // and close log files yourself. Loggers do that for you. Loggers are safe for
 // concurrent use.
 type Logger struct {
-	mu       sync.Mutex
-	path     string
-	start    time.Time
-	timer    *time.Timer
-	lastFile string // for determining when to print header
-	lastFunc string
+	mu       sync.Mutex  // protects all the other fields
+	path     string      // full path to log file
+	start    time.Time   // time of first write in the current log group
+	timer    *time.Timer // when it gets to 0, start a new log group
+	lastFile string      // last file to call Log(). determines when to print header
+	lastFunc string      // last function to call Log()
 }
 
 // TODO: implement flag that controls what gets printed in the header
