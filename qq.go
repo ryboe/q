@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,6 +18,15 @@ import (
 type color string
 
 const (
+	Ldate = 1 << iota
+	Ltime
+	Lmicroseconds
+	Llongfile
+	Lshortfile
+	LUTC
+	Lfuncname
+	LstdFlags = Ltime | Lshortfile | Lfuncname
+
 	bold     color = "\033[1m"
 	yellow   color = "\033[33m"
 	cyan     color = "\033[36m"
@@ -32,21 +42,21 @@ const (
 type Logger struct {
 	mu       sync.Mutex  // protects all the other fields
 	path     string      // full path to log file
+	flag     int         // determines what's printed in header line
 	start    time.Time   // time of first write in the current log group
 	timer    *time.Timer // when it gets to 0, start a new log group
 	lastFile string      // last file to call Log(). determines when to print header
 	lastFunc string      // last function to call Log()
 }
 
-// TODO: implement flag that controls what gets printed in the header
-
 // New creates a Logger that writes to the file at the given path.
-func New(path string) *Logger {
+func New(path string, flag int) *Logger {
 	t := time.NewTimer(0)
 	t.Stop()
 
 	return &Logger{
 		path:  path,
+		flag:  flag,
 		timer: t,
 	}
 }
@@ -81,7 +91,8 @@ func (l *Logger) Log(a ...interface{}) {
 	if timerExpired || funcName != l.lastFunc || filename != l.lastFile {
 		l.lastFunc = funcName
 		l.lastFile = filename
-		l.printHeader()
+		header := l.formatHeader(time.Now(), filename, funcName, line)
+		l.printHeader(header)
 	}
 
 	// extract arg names from source text between parens in qq.Log()
@@ -122,17 +133,56 @@ func (l *Logger) Output(a ...interface{}) {
 	fmt.Fprintln(f, a...)
 }
 
+// formatHeader creates the header based on which flags are set in the logger.
+func (l *Logger) formatHeader(t time.Time, filename, funcName string, line int) string {
+	if l.flag&LUTC != 0 {
+		t = t.UTC()
+	}
+
+	const maxHeaders = 4 // [date time filename funcname]
+	h := make([]string, 0, maxHeaders)
+	if l.flag&Ldate != 0 {
+		h = append(h, t.Format("2006/01/02"))
+	}
+
+	if l.flag&Lmicroseconds != 0 {
+		h = append(h, t.Format("15:04:05.000000"))
+	} else if l.flag&Ltime != 0 {
+		h = append(h, t.Format("15:04:05"))
+	}
+
+	// if Llongfile and Lshortfile both present, Lshortfile wins
+	if l.flag&Lshortfile != 0 {
+		filename = filepath.Base(filename)
+	}
+	if l.flag&(Llongfile|Lshortfile) != 0 {
+		h = append(h, fmt.Sprintf("%s:%d", filename, line))
+	}
+
+	if l.flag&Lfuncname != 0 {
+		h = append(h, funcName)
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(h, " "))
+}
+
 // printHeader prints a header of the form [16:11:18 main.go main.main]. Headers
 // make logs easier to read by reducing redundant information that is normally
 // printed on each line.
-func (l *Logger) printHeader() {
-	shortFile := filepath.Base(std.lastFile)
-	t := time.Now().Format("15:04:05")
+func (l *Logger) printHeader(header string) {
 	f := l.open()
 	defer f.Close()
-	fmt.Fprintf(f, "\n[%s %s %s]\n", t, shortFile, std.lastFunc)
+	fmt.Fprint(f, "\n", header, "\n")
 }
 
+// SetFlags sets the header flags for the logger.
+func (l *Logger) SetFlags(flag int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.flag = flag
+}
+
+// SetPath sets the destination log file for the logger.
 func (l *Logger) SetPath(path string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -252,20 +302,25 @@ func colorize(text string, c color) string {
 	return string(c) + text + string(endColor)
 }
 
-// default logger
-var std = New(filepath.Join(os.TempDir(), "qq.log"))
+// standard logger
+var std = New(filepath.Join(os.TempDir(), "qq.log"), LstdFlags)
 
-// Log writes a log message through the default logger.
+// Log writes a log message through the standard logger.
 func Log(a ...interface{}) {
 	std.Log(a...)
 }
 
-// Path returns the full path to the default qq.log file.
+// Path returns the full path to the standard qq.log file.
 func Path() string {
 	return std.Path()
 }
 
-// SetPath sets the output destination for the default logger. If the given path
+// SetFlags sets the header flags for the standard logger.
+func SetFlags(flag int) {
+	std.SetFlags(flag)
+}
+
+// SetPath sets the output destination for the standard logger. If the given path
 // is invalid, the next Log() call will panic.
 func SetPath(path string) {
 	std.SetPath(path)
