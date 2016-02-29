@@ -100,7 +100,7 @@ It's common to dedicate a terminal to just tailing `qq.log`.
 
 ## Advanced Usage
 
-Everything works just like the [`log` package](https://go.org/pkg/log/).
+Everything works just like the [`log` package](https://golang.org/pkg/log/).
 
 ### The Full Docs
 
