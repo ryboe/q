@@ -1,27 +1,32 @@
+// Package qq implements a pretty-printing logger. The output is formatted and
+// colorized to enhance readability. The predefined "standard" qq logger can be used
+// without i.
 package qq
 
 import (
-	"bytes"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 )
 
 type color string
 
+// ANSI color escape codes
 const (
-	// Control what's printed in the header line.
-	// See https://golang.org/pkg/log/#pkg-constants for an explanation of how
-	// these flags work.
+	bold     color = "\033[1m"
+	yellow   color = "\033[33m"
+	cyan     color = "\033[36m"
+	endColor color = "\033[0m" // "reset everything"
+)
+
+// These flags control what's printed in the header line. See
+// https://golang.org/pkg/log/#pkg-constants for an explanation of how they
+// work.
+const (
 	Ldate = 1 << iota
 	Ltime
 	Lmicroseconds
@@ -30,13 +35,9 @@ const (
 	LUTC
 	Lfuncname
 	LstdFlags = Ltime | Lshortfile | Lfuncname
+)
 
-	// ANSI color escape codes
-	bold     color = "\033[1m"
-	yellow   color = "\033[33m"
-	cyan     color = "\033[36m"
-	endColor color = "\033[0m" // "reset everything"
-
+const (
 	noName       = ""
 	maxLineWidth = 80
 )
@@ -75,6 +76,41 @@ func (l *Logger) Flags() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.flag
+}
+
+// formatHeader creates the header based on which flags are set in the logger.
+func (l *Logger) formatHeader(t time.Time, filename, funcName string, line int) string {
+	if l.flag&LUTC != 0 {
+		t = t.UTC()
+	}
+
+	const maxHeaders = 4 // [date time filename funcname]
+	h := make([]string, 0, maxHeaders)
+	if l.flag&Ldate != 0 {
+		h = append(h, t.Format("2006/01/02"))
+	}
+
+	if l.flag&Lmicroseconds != 0 {
+		h = append(h, t.Format("15:04:05.000000"))
+	} else if l.flag&Ltime != 0 {
+		h = append(h, t.Format("15:04:05"))
+	}
+
+	// if Llongfile and Lshortfile both present, Lshortfile wins
+	if l.flag&Lshortfile != 0 {
+		filename = filepath.Base(filename)
+	}
+
+	// append line number to filename
+	if l.flag&(Llongfile|Lshortfile) != 0 {
+		h = append(h, fmt.Sprintf("%s:%d", filename, line))
+	}
+
+	if l.flag&Lfuncname != 0 {
+		h = append(h, funcName)
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(h, " "))
 }
 
 // Log pretty-prints the given arguments to the log file.
@@ -124,153 +160,20 @@ func (l *Logger) Log(a ...interface{}) {
 	l.output(args...)
 }
 
-// formatArgs converts a slice of interface{} args to %#v strings colored cyan.
-func formatArgs(args []interface{}) []string {
-	formatted := make([]string, 0, len(args))
-	for _, a := range args {
-		s := fmt.Sprintf("%#v", a)
-		s = colorize(s, cyan)
-		formatted = append(formatted, s)
-	}
-	return formatted
-}
-
-// formatHeader creates the header based on which flags are set in the logger.
-func (l *Logger) formatHeader(t time.Time, filename, funcName string, line int) string {
-	if l.flag&LUTC != 0 {
-		t = t.UTC()
-	}
-
-	const maxHeaders = 4 // [date time filename funcname]
-	h := make([]string, 0, maxHeaders)
-	if l.flag&Ldate != 0 {
-		h = append(h, t.Format("2006/01/02"))
-	}
-
-	if l.flag&Lmicroseconds != 0 {
-		h = append(h, t.Format("15:04:05.000000"))
-	} else if l.flag&Ltime != 0 {
-		h = append(h, t.Format("15:04:05"))
-	}
-
-	// if Llongfile and Lshortfile both present, Lshortfile wins
-	if l.flag&Lshortfile != 0 {
-		filename = filepath.Base(filename)
-	}
-
-	// append line number to filename
-	if l.flag&(Llongfile|Lshortfile) != 0 {
-		h = append(h, fmt.Sprintf("%s:%d", filename, line))
-	}
-
-	if l.flag&Lfuncname != 0 {
-		h = append(h, funcName)
-	}
-
-	return fmt.Sprintf("[%s]", strings.Join(h, " "))
-}
-
-// printHeader prints a header of the form [16:11:18 main.go main.main]. Headers
-// make logs easier to read by reducing redundant information that is normally
-// printed on each line.
-func (l *Logger) printHeader(header string) {
-	f := l.open()
-	defer f.Close()
-	fmt.Fprint(f, "\n", header, "\n")
-}
-
-// argNames finds the qq.Log() call at the given filename/line number and
-// returns its arguments as a slice of strings. If the argument is a literal,
-// argNames will return an empty string at the index position of that argument.
-// For example, qq.Log(ip, port, 5432) would return []string{"ip", "port", ""}.
-// argNames returns a non-nil error if the source text cannot be parsed.
-func argNames(filename string, line int) ([]string, error) {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filename, nil, 0)
+// open returns a file descriptor for the open log file. If the file doesn't
+// exist, it is created. open will panic if it can't open the log file.
+func (l *Logger) open() *os.File {
+	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	var names []string
-	ast.Inspect(f, func(n ast.Node) bool {
-		call, is := n.(*ast.CallExpr)
-		if !is {
-			return true // visit next node
-		}
-
-		// is a function call, but on wrong line
-		if fset.Position(call.End()).Line != line {
-			return true
-		}
-
-		// is a function call on correct line, but not a qq function
-		if !qqCall(call) {
-			return true
-		}
-
-		for _, arg := range call.Args {
-			names = append(names, argName(arg))
-		}
-		return true
-	})
-
-	return names, nil
-}
-
-// qqCall returns true if the given function call expression is for a qq
-// function, e.g. qq.Log().
-func qqCall(n *ast.CallExpr) bool {
-	sel, is := n.Fun.(*ast.SelectorExpr) // SelectorExpr example: a.B()
-	if !is {
-		return false
-	}
-
-	ident, is := sel.X.(*ast.Ident) // sel.X is the part that precedes the .
-	if !is {
-		return false
-	}
-
-	return ident.Name == "qq"
-}
-
-// argName returns the source text of the given argument if it's a variable or
-// an expression. If the argument is something else, like a literal, argName
-// returns an empty string.
-func argName(arg ast.Expr) string {
-	name := noName
-	switch a := arg.(type) {
-	case *ast.Ident:
-		if a.Obj.Kind == ast.Var {
-			name = a.Obj.Name
-		}
-	case *ast.BinaryExpr,
-		*ast.CallExpr,
-		*ast.IndexExpr,
-		*ast.KeyValueExpr,
-		*ast.ParenExpr,
-		*ast.SliceExpr,
-		*ast.TypeAssertExpr,
-		*ast.UnaryExpr:
-		name = exprToString(arg)
-	}
-	return name
-}
-
-// exprToString returns the source text underlying the given ast.Expr.
-func exprToString(arg ast.Expr) string {
-	var buf bytes.Buffer
-	fset := token.NewFileSet()
-	printer.Fprint(&buf, fset, arg)
-
-	// CallExpr will be multi-line and indented with tabs. replace tabs with
-	// spaces so we can better control formatting during output()
-	return strings.Replace(buf.String(), "\t", "    ", -1)
+	return f
 }
 
 // output writes to the log file. Each log message is prepended with a
-// timestamp and prefix, if the prefix has been set. If there is more than one
-// argument on a line, and the line exceeds 80 characters, the line will be
-// broken up.
+// timestamp. If the prefix has been set, it will be prepended as well. If there
+// is more than one message printed on a line and the line exceeds 80
+// characters, the line will be broken up.
 func (l *Logger) output(a ...string) {
 	timestamp := fmt.Sprintf("%.3fs", time.Since(l.start).Seconds())
 	timestamp = colorize(timestamp, yellow) + " " // pad one space
@@ -314,26 +217,6 @@ func (l *Logger) output(a ...string) {
 	fmt.Fprint(f, "\n")
 }
 
-// open returns a file descriptor for the log file. If the file doesn't exist,
-// it is created. open will panic if it can't open the log file.
-func (l *Logger) open() *os.File {
-	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-	return f
-}
-
-// argWidth returns the number of characters that will be seen when the given
-// argument is printed at the terminal.
-func argWidth(arg string) int {
-	width := utf8.RuneCountInString(arg) - len(cyan) - len(endColor)
-	if strings.HasPrefix(arg, string(bold)) {
-		width -= len(bold) + len(endColor)
-	}
-	return width
-}
-
 // Path retuns the full path to the log file.
 func (l *Logger) Path() string {
 	l.mu.Lock()
@@ -346,6 +229,13 @@ func (l *Logger) Prefix() string {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.prefix
+}
+
+// printHeader prints a header of the form [16:11:18 main.go main.main].
+func (l *Logger) printHeader(header string) {
+	f := l.open()
+	defer f.Close()
+	fmt.Fprint(f, "\n", header, "\n")
 }
 
 // SetFlags sets the header flags for the logger.
@@ -362,36 +252,14 @@ func (l *Logger) SetPath(path string) {
 	l.path = path
 }
 
-// SetPrefix sets the prefix that's printed at the beginning of each log line.
+// SetPrefix sets the ouput prefix that's printed at the start of each log line.
 func (l *Logger) SetPrefix(prefix string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.prefix = prefix
 }
 
-// prependArgName turns argument names and values into name=value strings, e.g.
-// "port=443", "3+2=5". If the name is given, it will be bolded using ANSI
-// escape codes. If no name is given, just the value will be returned.
-func prependArgName(names, values []string) []string {
-	prepended := make([]string, len(values))
-	for i, name := range names {
-		if name == noName {
-			prepended[i] = values[i]
-			continue
-		}
-		name = colorize(name, bold)
-		prepended[i] = fmt.Sprintf("%s=%s", name, values[i])
-	}
-	return prepended
-}
-
-// colorize returns the given text encapsulated in ANSI escape codes that
-// give the text color in the terminal.
-func colorize(text string, c color) string {
-	return string(c) + text + string(endColor)
-}
-
-// standard logger
+// standard qq logger
 var std = New(filepath.Join(os.TempDir(), "qq.log"), "", LstdFlags)
 
 // Flags returns the output flags for the standard qq logger.
@@ -404,7 +272,7 @@ func Log(a ...interface{}) {
 	std.Log(a...)
 }
 
-// Path returns the full path to the standard qq.log file.
+// Path returns the full path to the qq.log file.
 func Path() string {
 	return std.Path()
 }
@@ -419,13 +287,13 @@ func SetFlags(flag int) {
 	std.SetFlags(flag)
 }
 
-// SetPath sets the output destination for the standard logger. If the given path
-// is invalid, the next Log() call will panic.
+// SetPath sets the output destination for the standard logger. If the given
+// path is invalid, the next Log() call will panic.
 func SetPath(path string) {
 	std.SetPath(path)
 }
 
-// SetPrefix sets the prefix for the standard qq logger.
+// SetPrefix sets the output prefix for the standard qq logger.
 func SetPrefix(prefix string) {
 	std.SetPrefix(prefix)
 }
