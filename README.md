@@ -31,7 +31,26 @@ import . "github.com/y0ssar1an/q"
 Q(a, b, c)
 ```
 
+
 For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
+
+## Editor Integration
+
+#### Sublime Text
+```
+cp $GOPATH/src/github.com/y0ssar1an/q/qq.sublime-snippet Packages/User/qq.sublime-snippet
+```
+
+#### Atom
+Navigate to your `snippets.cson` file by either opening `~/.atom/snippets.cson`
+directly or by selecting the `Atom > Open Your Snippets` menu. You can then add
+this code snippet to the bottom and save the file:
+```
+'.source.go':
+  'qq log':
+    'prefix': 'qq'
+    'body': 'qq.Log($1)'
+```
 
 ## Install
 
