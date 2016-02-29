@@ -9,6 +9,7 @@ variables (common in Go).
 ## tl;dr
 
 It prints your variables like this:
+
 ![qq output examples](https://i.imgur.com/4M125tLl.png)
 
 ## Why `qq` is Better than `fmt.Print*()` and `log.Print*()` for Debugging
