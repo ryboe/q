@@ -287,7 +287,7 @@ func SetFlags(flag int) {
 	std.SetFlags(flag)
 }
 
-// SetPath sets the output destination for the standard logger. If the given
+// SetPath sets the output destination for the standard qq logger. If the given
 // path is invalid, the next Log() call will panic.
 func SetPath(path string) {
 	std.SetPath(path)
