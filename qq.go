@@ -1,6 +1,6 @@
-// Package qq implements a pretty-printing logger. The output is formatted and
-// colorized to enhance readability. The predefined "standard" qq logger can be used
-// without i.
+// Package qq provides quick and dirty debugging output for tired programmers.
+// The output is formatted and colorized to enhance readability. The predefined
+// "standard" qq logger can be used without i.
 package qq
 
 import (
