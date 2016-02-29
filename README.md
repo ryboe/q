@@ -2,7 +2,7 @@
 
 Better print-statement debugging for Go.
 
-This is a port of Python's `q` module by [zestyping](https://github.com/zestyping/q).
+This is a port of Python's [`q` module by zestyping](https://github.com/zestyping/q).
 I changed the name to `qq` to avoid naming collisions with `q` variables.
 Single-letter variables are common in Go.
 
