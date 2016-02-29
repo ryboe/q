@@ -81,7 +81,15 @@ cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/.config/sublime-text
 ```
 
 #### Atom
-TBD
+Navigate to your `snippets.cson` file by either opening `~/.atom/snippets.cson`
+directly or by selecting the `Atom > Open Your Snippets` menu. You can then add 
+this code snippet to the bottom and save the file:
+```
+'.source.go':
+  'qq log':
+    'prefix': 'qq'
+    'body': 'qq.Log($1)'
+```
 
 #### Vim
 TBD Somebody send me a PR, please.
