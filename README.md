@@ -61,7 +61,7 @@ Then `tail -f` the `qq.log` file in your `$TMPDIR`. That's it. Note that typing
 `tail -f $TMPDIR/qq.log` might not work because `$TMPDIR` may have a trailing
 slash. You think you're typing `/tmp/qq.log`, but you're actually typing
 `/tmp//qq.log`. To avoid these headaches, it's recommended that you use the
-alias [below](https://github.com/y0ssar1an/qq/blob/master/README.md#easy-log-tailing).
+alias [below](https://github.com/y0ssar1an/qq#easy-log-tailing).
 
 ## Snippets
 
