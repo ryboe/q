@@ -38,7 +38,7 @@ If you're still not sure why you should care, Ping does a way better job of
 explaining this in his awesome lightning talk from PyCon 2013. Most of what he
 says applies to Go.
 
-[![still from ping's lightning talk](http://i.imgur.com/5nFiac6l.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
+[![still from ping's lightning talk](http://i.imgur.com/7KmWvtG.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
 ## Install
 
