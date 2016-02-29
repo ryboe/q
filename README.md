@@ -35,8 +35,8 @@ Then you'll see this in `qq.log`:
 ![imgur link](http://i.imgur.com/hUgIKyA.png)
 
 If you're still not sure why you should care, Ping does a way better job of
-explaining this in his lightning talk from PyCon 2013. Most of what he says
-applies to Go.
+explaining this in his awesome lightning talk from PyCon 2013. Most of what he
+says applies to Go.
 
 [![still from ping's lightning talk](http://i.imgur.com/5nFiac6.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
