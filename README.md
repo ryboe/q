@@ -48,6 +48,8 @@ go get github.com/y0ssar1an/qq
 
 ## Basic Usage
 
+99% of the time, you'll be using this one function.
+
 ```golang
 import "github.com/y0ssar1an/qq"
 ...
