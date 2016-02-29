@@ -1,7 +1,5 @@
 # qq
 
-Better print-statement debugging for Go.
-
 This is a port of Python's [`q` module by zestyping](https://github.com/zestyping/q).
 I changed the name to `qq` to avoid naming collisions with single-letter `q`
 variables (common in Go).
@@ -60,8 +58,8 @@ qq.Log(a, b, c)
 Then `tail -f` the `qq.log` file in your `$TMPDIR`. That's it. Note that typing
 `tail -f $TMPDIR/qq.log` might not work because `$TMPDIR` may have a trailing
 slash. You think you're typing `/tmp/qq.log`, but you're actually typing
-`/tmp//qq.log`. To avoid these headaches, it's recommended that you use the
-alias [below](https://github.com/y0ssar1an/qq#easy-log-tailing).
+`/tmp//qq.log`. To avoid these headaches, it's recommended that you use [the
+alias below](https://github.com/y0ssar1an/qq#easy-log-tailing).
 
 ## Snippets
 
