@@ -4,41 +4,40 @@ Better print-statement debugging for Go.
 
 This is a port of Python's `q` module by [zestyping](https://github.com/zestyping/q).
 I changed the name to `qq` to avoid naming collisions with `q` variables.
+Single-letter variables are common in Go.
 
 ## tl;dr
 
 It prints your variables like this:
-![qq output examples]()
+![qq output examples](http://i.imgur.com/4M125tL.png)
 
-## Why `qq` is better than `fmt.Print*()` and `log.Print*()` for debugging
+## Why `qq` is Better than `fmt.Print*()` and `log.Print*()` for Debugging
 
-You've probably written something like this a thousand times:
+You've probably written this a thousand times:
 
-```
+```golang
 fmt.Println("\n\n\n\nDEBUG!!!!") // gee, i hope i see this when it flies by.
 fmt.Println("query:", query)     // add "query:" so i know which var this is
 ```
 
-That's a lot of effort to see one variable, and it still fails because you
-forgot to import `fmt`, or you forgot that stdout gets redirected, or there's
-so much noise on stdout/stderr that you can't find it, or some other dumb
-reason.
+That's a lot of effort to see one variable, and it still fails because stdout
+is getting redirected somewhere, or there's so much noise on stdout/stderr that
+you can't find it, or some other dumb reason.
 
 Try this instead:
 
-```
+```golang
 qq.Log(query)
 ```
 
 Then you'll see this in `qq.log`:
+![imgur link](http://i.imgur.com/hUgIKyA.png)
 
-![imgur link]()
+If you're still not sure why you should care, Ping does a way better job of
+explaining this in his lightning talk from PyCon 2013. Most of what he says
+applies to Go.
 
-For a better demonstration, check out [Ping's Lightning Talk from PyCon 2013](https://youtu.be/OL3De8BAhME?t=25m14s).
-Everything he says applies to Go.
-
-[![still from ping's lightning talk]()]()
-
+[![still from ping's lightning talk](http://i.imgur.com/5nFiac6.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
 ## Install
 
@@ -54,7 +53,11 @@ import "github.com/y0ssar1an/qq"
 qq.Log(a, b, c)
 ```
 
-Then `tail -f` the `qq.log` file in your $TMPDIR. That's it.
+Then `tail -f` the `qq.log` file in your `$TMPDIR`. That's it. Note that typing
+`tail -f $TMPDIR/qq.log` might not work because `$TMPDIR` has a trailing slash.
+You think you're typing `/tmp/qq.log`, but you're actually typing
+`/tmp//qq.log`. To avoid these headaches, it's recommended that you use the
+alias [below](https://github.com/y0ssar1an/qq/blob/master/README.md#easy-log-tailing).
 
 ## Snippets
 
@@ -64,13 +67,11 @@ Then you'll just type `qq<TAB>` and it will expand to `qq.Log()`.
 
 ### Sublime Text
 ```
-cd $GOPATH/src/github.com/y0ssar1an/qq
-
 # OS X
-cp qq.sublime-snippet ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
+cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
 
 # Linux
-cp qq.sublime-snippet ~/.config/sublime-text-3/Packages/User
+cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/.config/sublime-text-3/Packages/User
 
 # Windows
 ???
@@ -78,22 +79,28 @@ cp qq.sublime-snippet ~/.config/sublime-text-3/Packages/User
 ```
 
 ### Atom
-```
-
-```
+TBD
 
 ### Vim
 TBD Somebody send me a PR, please.
 
 
-### Easy log tailing
+## Easy Log Tailing
 
 Put this alias in your shell config right meow!
 ```
 alias qq=". $GOPATH/src/github.com/y0ssar1an/qq/qq.sh"
 ```
 
+It's common to dedicate a terminal to just tailing `qq.log`.
+
 ## Advanced Usage
+
+Everything works just like the [`log` package](https://golang.org/pkg/log/).
+
+### The Full Docs
+
+[https://godoc.org/github.com/y0ssar1an/qq](https://godoc.org/github.com/y0ssar1an/qq)
 
 ### Customize the Header Line
 
@@ -113,88 +120,40 @@ myqq := qq.New("/tmp/myqq.log", LstdFlags)
 myqq.Log("herpa derp")
 ```
 
+### Set a Prefix
+```golang
+qq.SetPrefix("main goroutine")
+```
+
 ## FAQ
 
 ### Is `qq.Log()` concurrency safe?
 Yes
 
 ### Why does `New()` take a file path instead of an `io.Writer`?
-You would have to open and close the de
+You would have to open and close the output destination every time you wanted
+to write. Since the point of this library is "quick and dirty debugging output
+for tired programmers", it seemed like a good tradeoff. We lose some
+flexibility, but it saves a lot of typing.
 
-## Troubleshooting
-
-### I can't find the qq.log file
-
-`$TMPDIR/qq.log`. If `$TMPDIR` isn't set, they're going to
-`/tmp/qq.log`. If you're on Android, they're going to `/data/local/tmp/qq.log`.
-
-
-
-## Why this is better than `fmt.Print*()` and `log.Print*()`
+### Seriously, why is this better than `fmt.Print*()` and `log.Print*()`
 
 `qq` logs are...
 	- optimized for human readability. your ordinary program logs should be
 	optimized for machine readability (see structured logging). the most
 	important features are colorized. long lines are broken up. redundant info
 	is minimized.
-	- separated from your
+	- a separate, dedicated stream of debug logs. it's like the DEBUG log level,
+	except with zero config.
+	- quick to type, especially if you use a snippet for your editor
 
 `qq` logs never...
 	- get lost in the noise of stdout or stderr
 	- get redirected
 
+## Troubleshooting
 
+### I can't find the `qq.log` file
 
-
-## Install
-
-```
-go get github.com/y0ssar1an/qq
-```
-
-## How to Use
-
-`qq.Log(a, b, c)`. Then `tail -f` the `qq.log` file in your $TMPDIR. That's it.
-
-Now you _could_ type `qq.Log(a, b, c)`, but who's got time to type _all those
-characters_? A better way is to add one of the provided snippets to your editor.
-Then you'll just type `qq<TAB>` and it will expand to `qq.Log()`.
-
-Also, put this alias in your shell config right meow!
-```
-alias qq=""
-```
-
-
-
-Like the `log` package, `qq` loggers are safe for concurrent use.
-
-
-
-### Set a Prefix
-
-###
-
-
-# Where Are My Logs Going?
-
-They're going to `$TMPDIR/qq.log`. If `$TMPDIR` isn't set, they're going to
-`/tmp/qq.log`. If you're on Android, they're going to `/data/local/tmp/qq.log`.
-
-
-When you're debugging in Go, and you just want to insert a quick print statement
-so you can see the value of a variable
-
-When you're debugging in Go, and you just want to insert a quick print statement
-to see the value of a variable, would you rather look at a wall of text or this?
-
-
-
-1) It prints the variable name with the value
-2) ...in pretty colors
-3) ...in a dedicated log file, away from all the noise of stdout and stderr
-
-## Why it's better than fmt.Println or log.Println
-
-Stdout
-
+It's in `$TMPDIR`. If `$TMPDIR` isn't set, they're going to `/tmp/qq.log`. If
+you're on Android, they're going to `/data/local/tmp/qq.log`.
