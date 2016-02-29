@@ -3,13 +3,13 @@
 Better print-statement debugging for Go.
 
 This is a port of Python's [`q` module by zestyping](https://github.com/zestyping/q).
-I changed the name to `qq` to avoid naming collisions with `q` variables.
-Single-letter variables are common in Go.
+I changed the name to `qq` to avoid naming collisions with single-letter `q`
+variables (common in Go).
 
 ## tl;dr
 
 It prints your variables like this:
-![qq output examples](http://i.imgur.com/4M125tL.png)
+![qq output examples](http://i.imgur.com/4M125tl.png)
 
 ## Why `qq` is Better than `fmt.Print*()` and `log.Print*()` for Debugging
 
