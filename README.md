@@ -9,7 +9,7 @@ variables (common in Go).
 ## tl;dr
 
 It prints your variables like this:
-![qq output examples](http://i.imgur.com/4M125tl.png)
+![qq output examples](https://i.imgur.com/4M125tLl.png)
 
 ## Why `qq` is Better than `fmt.Print*()` and `log.Print*()` for Debugging
 
@@ -32,13 +32,13 @@ qq.Log(query)
 
 Then you'll see this in `qq.log`:
 
-![imgur link](http://i.imgur.com/hUgIKyA.png)
+![imgur link](https://i.imgur.com/hUgIKyA.png)
 
 If you're still not sure why you should care, Ping does a way better job of
 explaining this in his awesome lightning talk from PyCon 2013. Most of what he
 says applies to Go.
 
-[![still from ping's lightning talk](http://i.imgur.com/7KmWvtG.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
+[![still from ping's lightning talk](https://i.imgur.com/7KmWvtG.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
 ## Install
 
