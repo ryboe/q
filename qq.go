@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 )
 
 type color string
@@ -36,18 +37,17 @@ const (
 	cyan     color = "\033[36m"
 	endColor color = "\033[0m" // "reset everything"
 
-	noName         = ""
-	timeStampWidth = 6
-	maxLineWidth   = 80
+	noName       = ""
+	maxLineWidth = 80
 )
 
 // A Logger writes pretty log messages to a file. Loggers write to files only,
 // not io.Writers. The upside of this restriction is you don't have to open
-// and close log files yourself. Loggers do that for you. Loggers are safe for
-// concurrent use.
+// and close log files yourself. Loggers are safe for concurrent use.
 type Logger struct {
 	mu       sync.Mutex  // protects all the other fields
 	path     string      // full path to log file
+	prefix   string      // prefix to write at beginning of each line
 	flag     int         // determines what's printed in header line
 	start    time.Time   // time of first write in the current log group
 	timer    *time.Timer // when it gets to 0, start a new log group
@@ -55,19 +55,29 @@ type Logger struct {
 	lastFunc string      // last function to call Log()
 }
 
-// New creates a Logger that writes to the file at the given path.
-func New(path string, flag int) *Logger {
+// New creates a Logger that writes to the file at the given path. The prefix
+// appears before each log line. The flag determines what is printed in the
+// header line, e.g. "[15:21:27 main.go:107 main.main]"
+func New(path, prefix string, flag int) *Logger {
 	t := time.NewTimer(0)
 	t.Stop()
 
 	return &Logger{
-		path:  path,
-		flag:  flag,
-		timer: t,
+		path:   path,
+		prefix: prefix,
+		flag:   flag,
+		timer:  t,
 	}
 }
 
-// Log pretty-prints the given arguments to the file associated with the Logger.
+// Flags returns the output header flags for the logger.
+func (l *Logger) Flags() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.flag
+}
+
+// Log pretty-prints the given arguments to the log file.
 func (l *Logger) Log(a ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -87,8 +97,9 @@ func (l *Logger) Log(a ...interface{}) {
 		callDepth = 1 // user is calling myCustomQQLogger.Log()
 	}
 	pc, filename, line, ok := runtime.Caller(callDepth)
+	args := formatArgs(a)
 	if !ok {
-		l.Output(a...) // no fancy printing :(
+		l.output(args...) // no name=value printing
 		return
 	}
 
@@ -104,39 +115,24 @@ func (l *Logger) Log(a ...interface{}) {
 	// extract arg names from source text between parens in qq.Log()
 	names, err := argNames(filename, line)
 	if err != nil {
-		l.Output(a...) // no fancy printing :(
+		l.output(args...) // no name=value printing
 		return
 	}
 
-	// colorize names and values. convert values to %#v strings
-	a = formatArgs(names, a)
-	l.Output(a...)
+	// convert args to name=value strings
+	args = prependArgName(names, args)
+	l.output(args...)
 }
 
-// Path retuns the full path to the file associated with the Logger.
-func (l *Logger) Path() string {
-	return l.path
-}
-
-// open returns a file descriptor for the file at l.path, creating it if it
-// doesn't exist. It will panic if it can't open the file.
-func (l *Logger) open() *os.File {
-	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
+// formatArgs converts a slice of interface{} args to %#v strings colored cyan.
+func formatArgs(args []interface{}) []string {
+	formatted := make([]string, 0, len(args))
+	for _, a := range args {
+		s := fmt.Sprintf("%#v", a)
+		s = colorize(s, cyan)
+		formatted = append(formatted, s)
 	}
-	return f
-}
-
-// Output writes to the log file associated with l. Each log message is
-// prepended with a timestamp.
-func (l *Logger) Output(a ...interface{}) {
-	timestamp := fmt.Sprintf("%.3fs", time.Since(l.start).Seconds())
-	timestamp = colorize(timestamp, yellow)
-	a = append([]interface{}{timestamp}, a...)
-	f := l.open()
-	defer f.Close()
-	fmt.Fprintln(f, a...)
+	return formatted
 }
 
 // formatHeader creates the header based on which flags are set in the logger.
@@ -161,6 +157,8 @@ func (l *Logger) formatHeader(t time.Time, filename, funcName string, line int) 
 	if l.flag&Lshortfile != 0 {
 		filename = filepath.Base(filename)
 	}
+
+	// append line number to filename
 	if l.flag&(Llongfile|Lshortfile) != 0 {
 		h = append(h, fmt.Sprintf("%s:%d", filename, line))
 	}
@@ -179,20 +177,6 @@ func (l *Logger) printHeader(header string) {
 	f := l.open()
 	defer f.Close()
 	fmt.Fprint(f, "\n", header, "\n")
-}
-
-// SetFlags sets the header flags for the logger.
-func (l *Logger) SetFlags(flag int) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.flag = flag
-}
-
-// SetPath sets the destination log file for the logger.
-func (l *Logger) SetPath(path string) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.path = path
 }
 
 // argNames finds the qq.Log() call at the given filename/line number and
@@ -253,7 +237,7 @@ func qqCall(n *ast.CallExpr) bool {
 // an expression. If the argument is something else, like a literal, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
-	var name string
+	name := noName
 	switch a := arg.(type) {
 	case *ast.Ident:
 		if a.Obj.Kind == ast.Var {
@@ -277,45 +261,128 @@ func exprToString(arg ast.Expr) string {
 	var buf bytes.Buffer
 	fset := token.NewFileSet()
 	printer.Fprint(&buf, fset, arg)
-	return buf.String() // returns empty string if printer fails
+
+	// CallExpr will be multi-line and indented with tabs. replace tabs with
+	// spaces so we can better control formatting during output()
+	return strings.Replace(buf.String(), "\t", "    ", -1)
 }
 
-// formatArgs turns argument names and values into pretty-printed strings. If
-// the argument is a variable or an expression, it will be returned as a
-// colorized name=value string, e.g. "port=443", "3+2=5". If the argument is a
-// literal, only the colorized value will be returned. Variable names,
-// expressions, and values are colorized using ANSI escape codes.
-func formatArgs(names []string, values []interface{}) []interface{} {
-	var formatted []interface{}
-	lineWidth := timeStampWidth
-	for i, v := range values {
-		arg := formatArg(names[i], v)
+// output writes to the log file. Each log message is prepended with a
+// timestamp and prefix, if the prefix has been set. If there is more than one
+// argument on a line, and the line exceeds 80 characters, the line will be
+// broken up.
+func (l *Logger) output(a ...string) {
+	timestamp := fmt.Sprintf("%.3fs", time.Since(l.start).Seconds())
+	timestamp = colorize(timestamp, yellow) + " " // pad one space
 
-		// break line at 80 chars
-		argWidth := len(arg) + 1 // +1 for trailing space
-		lineWidth += argWidth
-		if lineWidth > maxLineWidth {
-			formatted = append(formatted, "\n      ") // spaces to line up with timestamp
-			lineWidth = argWidth
+	prefix := ""
+	if l.prefix != "" {
+		prefix = l.prefix + " " // pad one space
+	}
+
+	f := l.open()
+	defer f.Close()
+	fmt.Fprintf(f, "%s%s", timestamp, prefix)
+
+	// preWidth is length of everything before log message
+	preWidth := len(timestamp) - len(yellow) - len(endColor) + len(prefix)
+	preSpaces := strings.Repeat(" ", preWidth)
+	padding := ""
+	lineArgs := 0 // number of args printed on current log line
+	lineWidth := preWidth
+	for _, arg := range a {
+		argWidth := argWidth(arg)
+		lineWidth += argWidth + len(padding)
+
+		// some names in name=value strings contain newlines. insert indentation
+		// after each newline so they line up
+		arg = strings.Replace(arg, "\n", "\n"+preSpaces, -1)
+
+		// break up long lines. if this is first arg printed on the line
+		// (lineArgs == 0), makes no sense to break up the line
+		if lineWidth > maxLineWidth && lineArgs != 0 {
+			fmt.Fprint(f, "\n", preSpaces)
+			lineArgs = 0
+			lineWidth = preWidth + argWidth
+			padding = ""
 		}
-
-		formatted = append(formatted, arg)
+		fmt.Fprint(f, padding, arg)
+		lineArgs++
+		padding = " "
 	}
-	return formatted
+
+	fmt.Fprint(f, "\n")
 }
 
-// formatArg takes an argument name and value and returns a colorized string,
-// with the value in %#v format.
-func formatArg(name string, value interface{}) string {
-	v := fmt.Sprintf("%#v", value)
-	v = colorize(v, cyan)
-
-	if name == noName {
-		return v // arg is a literal
+// open returns a file descriptor for the log file. If the file doesn't exist,
+// it is created. open will panic if it can't open the log file.
+func (l *Logger) open() *os.File {
+	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
 	}
+	return f
+}
 
-	name = colorize(name, bold)
-	return fmt.Sprintf("%s=%s", name, v)
+// argWidth returns the number of characters that will be seen when the given
+// argument is printed at the terminal.
+func argWidth(arg string) int {
+	width := utf8.RuneCountInString(arg) - len(cyan) - len(endColor)
+	if strings.HasPrefix(arg, string(bold)) {
+		width -= len(bold) + len(endColor)
+	}
+	return width
+}
+
+// Path retuns the full path to the log file.
+func (l *Logger) Path() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.path
+}
+
+// Prefix returns the output prefix for the logger.
+func (l *Logger) Prefix() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.prefix
+}
+
+// SetFlags sets the header flags for the logger.
+func (l *Logger) SetFlags(flag int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.flag = flag
+}
+
+// SetPath sets the destination log file for the logger.
+func (l *Logger) SetPath(path string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.path = path
+}
+
+// SetPrefix sets the prefix that's printed at the beginning of each log line.
+func (l *Logger) SetPrefix(prefix string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.prefix = prefix
+}
+
+// prependArgName turns argument names and values into name=value strings, e.g.
+// "port=443", "3+2=5". If the name is given, it will be bolded using ANSI
+// escape codes. If no name is given, just the value will be returned.
+func prependArgName(names, values []string) []string {
+	prepended := make([]string, len(values))
+	for i, name := range names {
+		if name == noName {
+			prepended[i] = values[i]
+			continue
+		}
+		name = colorize(name, bold)
+		prepended[i] = fmt.Sprintf("%s=%s", name, values[i])
+	}
+	return prepended
 }
 
 // colorize returns the given text encapsulated in ANSI escape codes that
@@ -325,9 +392,14 @@ func colorize(text string, c color) string {
 }
 
 // standard logger
-var std = New(filepath.Join(os.TempDir(), "qq.log"), LstdFlags)
+var std = New(filepath.Join(os.TempDir(), "qq.log"), "", LstdFlags)
 
-// Log writes a log message through the standard logger.
+// Flags returns the output flags for the standard qq logger.
+func Flags() int {
+	return std.Flags()
+}
+
+// Log writes a log message through the standard qq logger.
 func Log(a ...interface{}) {
 	std.Log(a...)
 }
@@ -337,7 +409,12 @@ func Path() string {
 	return std.Path()
 }
 
-// SetFlags sets the header flags for the standard logger.
+// Prefix returns the output prefix for the standard qq logger.
+func Prefix() string {
+	return std.Prefix()
+}
+
+// SetFlags sets the header flags for the standard qq logger.
 func SetFlags(flag int) {
 	std.SetFlags(flag)
 }
@@ -346,4 +423,9 @@ func SetFlags(flag int) {
 // is invalid, the next Log() call will panic.
 func SetPath(path string) {
 	std.SetPath(path)
+}
+
+// SetPrefix sets the prefix for the standard qq logger.
+func SetPrefix(prefix string) {
+	std.SetPrefix(prefix)
 }
