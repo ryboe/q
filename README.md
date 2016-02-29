@@ -31,6 +31,7 @@ qq.Log(query)
 ```
 
 Then you'll see this in `qq.log`:
+
 ![imgur link](http://i.imgur.com/hUgIKyA.png)
 
 If you're still not sure why you should care, Ping does a way better job of
