@@ -90,7 +90,7 @@ TBD Somebody send me a PR, please.
 
 Put this alias in your shell config right meow!
 ```
-alias qq=$([[ $TMPDIR == "" ]] && tail -100f $TMPDIR/qq.log || tail -100f "/tmp/qq.log")
+alias qq=". $GOPATH/src/github.com/y0ssar1an/qq/qq.sh"
 ```
 
 ## Advanced Usage
