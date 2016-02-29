@@ -15,7 +15,7 @@ It prints your variables like this:
 
 You've probably written this a thousand times:
 
-```golang
+```go
 fmt.Println("\n\n\n\nDEBUG!!!!") // gee, i hope i see this when it flies by.
 fmt.Println("query:", query)     // add "query:" so i know which var this is
 ```
@@ -26,7 +26,7 @@ some other dumb reason.
 
 Try this instead:
 
-```golang
+```go
 qq.Log(query)
 ```
 
@@ -50,7 +50,7 @@ go get github.com/y0ssar1an/qq
 
 99% of the time, you'll be using this one function.
 
-```golang
+```go
 import "github.com/y0ssar1an/qq"
 ...
 qq.Log(a, b, c)
@@ -99,7 +99,7 @@ It's common to dedicate a terminal to just tailing `qq.log`.
 
 ## Advanced Usage
 
-Everything works just like the [`log` package](https://golang.org/pkg/log/).
+Everything works just like the [`log` package](https://go.org/pkg/log/).
 
 ### The Full Docs
 
@@ -109,7 +109,7 @@ Everything works just like the [`log` package](https://golang.org/pkg/log/).
 
 `qq` uses the same flags as the `log` package, with the addition of `Lfuncname`
 
-```golang
+```go
 qq.SetFlags(LUTC | Llongfile | Lmicroseconds | Lfuncname)`
 ```
 
@@ -118,13 +118,13 @@ qq.SetFlags(LUTC | Llongfile | Lmicroseconds | Lfuncname)`
 Create a separate `Logger` associated with the new file. Don't worry about
 opening and closing the log file. `qq` will take care of that.
 
-```golang
+```go
 myqq := qq.New("/tmp/myqq.log", LstdFlags)
 myqq.Log("herpa derp")
 ```
 
 ### Set a Prefix
-```golang
+```go
 qq.SetPrefix("main goroutine")
 ```
 
@@ -135,24 +135,10 @@ Yes
 
 ### Why does `New()` take a file path instead of an `io.Writer`?
 You would have to open and close the output destination every time you wanted
-to write. Since the point of this library is "quick and dirty debugging output
-for tired programmers", it seemed like a good tradeoff. We lose some
-flexibility, but it saves a lot of typing.
-
-### Seriously, why is this better than `fmt.Print*()` and `log.Print*()`
-
-`qq` logs are...
-	- optimized for human readability. your ordinary program logs should be
-	optimized for machine readability (see structured logging). the most
-	important features are colorized. long lines are broken up. redundant info
-	is minimized.
-	- a separate, dedicated stream of debug logs. it's like the DEBUG log level,
-	except with zero config.
-	- quick to type, especially if you use a snippet for your editor
-
-`qq` logs never...
-	- get lost in the noise of stdout or stderr
-	- get redirected
+to write. By giving the `qq` Logger a file path, it can take care of opening
+and closing the log file for you. The goal of this library is to be "quick and
+dirty debugging output for tired programmers". We're willing to trade some
+flexibility to minimize typing.
 
 ## Troubleshooting
 
