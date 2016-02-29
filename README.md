@@ -20,9 +20,9 @@ fmt.Println("\n\n\n\nDEBUG!!!!") // gee, i hope i see this when it flies by.
 fmt.Println("query:", query)     // add "query:" so i know which var this is
 ```
 
-That's a lot of effort to see one variable, and it still fails because stdout
-is getting redirected somewhere, or there's so much noise on stdout/stderr that
-you can't find it, or some other dumb reason.
+That's a lot of typing, and it still fails because stdout is getting redirected
+somewhere, or there's so much noise on stdout/stderr that you can't find it, or
+some other dumb reason.
 
 Try this instead:
 
@@ -38,7 +38,7 @@ If you're still not sure why you should care, Ping does a way better job of
 explaining this in his awesome lightning talk from PyCon 2013. Most of what he
 says applies to Go.
 
-[![still from ping's lightning talk](http://i.imgur.com/5nFiac6.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
+[![still from ping's lightning talk](http://i.imgur.com/5nFiac6l.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
 ## Install
 
@@ -66,7 +66,7 @@ You _could_ type `qq.Log(a, b, c)`, but who's got time to type _all those
 characters_? A better way is to add one of the provided snippets to your editor.
 Then you'll just type `qq<TAB>` and it will expand to `qq.Log()`.
 
-### Sublime Text
+#### Sublime Text
 ```
 # OS X
 cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
@@ -79,14 +79,14 @@ cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/.config/sublime-text
 
 ```
 
-### Atom
+#### Atom
 TBD
 
-### Vim
+#### Vim
 TBD Somebody send me a PR, please.
 
 
-## Easy Log Tailing
+### Easy Log Tailing
 
 Put this alias in your shell config right meow!
 ```
