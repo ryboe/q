@@ -118,7 +118,7 @@ Create a separate `Logger` associated with the new file. Don't worry about
 opening and closing the log file. `qq` will take care of that.
 
 ```go
-myqq := qq.New("/tmp/myqq.log", LstdFlags)
+myqq := qq.New("/tmp/myqq.log", "", LstdFlags)
 myqq.Log("herpa derp")
 ```
 
