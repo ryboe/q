@@ -1,6 +1,12 @@
 // Package qq provides quick and dirty debugging output for tired programmers.
-// The output is formatted and colorized to enhance readability. The predefined
-// "standard" qq logger can be used without i.
+// It's used to quickly print variables. With one call you can see the variable
+// name, value, and the filename, function, and line number. The output goes to
+// a special qq.log file, away from all the noise of your running program. The
+// output is easy on the eyes, with pretty colors and nice formatting.
+
+// The API is almost identical to the standard log package. You can set a prefix
+// with SetPrefix(). You can set output flags with SetOutput(). Like the log
+// package, you can just start calling qq.Log() without initializing anything.
 package qq
 
 import (
