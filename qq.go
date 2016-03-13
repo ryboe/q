@@ -113,7 +113,7 @@ func (l *Logger) formatHeader(t time.Time, filename, funcName string, line int) 
 	}
 
 	if l.flag&Lfuncname != 0 {
-		h = append(h, funcName)
+		h = append(h, filepath.Base(funcName))
 	}
 
 	return fmt.Sprintf("[%s]", strings.Join(h, " "))
