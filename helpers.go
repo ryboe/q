@@ -26,6 +26,7 @@ func argName(arg ast.Expr) string {
 		*ast.IndexExpr,
 		*ast.KeyValueExpr,
 		*ast.ParenExpr,
+		*ast.SelectorExpr,
 		*ast.SliceExpr,
 		*ast.TypeAssertExpr,
 		*ast.UnaryExpr:
