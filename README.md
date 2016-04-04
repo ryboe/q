@@ -45,6 +45,14 @@ says applies to Go.
 go get github.com/y0ssar1an/qq
 ```
 
+Put this alias in your shell config. Typing `qq` will then start tailing
+`qq.log`.
+```
+alias qq=". $GOPATH/src/github.com/y0ssar1an/qq/qq.sh"
+```
+
+It's common to dedicate a terminal to just tailing `qq.log`.
+
 ## Basic Usage
 
 99% of the time, you'll be using this one function.
@@ -54,12 +62,6 @@ import "github.com/y0ssar1an/qq"
 ...
 qq.Log(a, b, c)
 ```
-
-Then `tail -f` the `qq.log` file in your `$TMPDIR`. That's it. Note that typing
-`tail -f $TMPDIR/qq.log` might not work because `$TMPDIR` may have a trailing
-slash. You think you're typing `/tmp/qq.log`, but you're actually typing
-`/tmp//qq.log`. To avoid these headaches, it's recommended that you use [the
-alias below](https://github.com/y0ssar1an/qq#easy-log-tailing).
 
 ## Snippets
 
@@ -82,7 +84,7 @@ cp $GOPATH/src/github.com/y0ssar1an/qq/qq.sublime-snippet ~/.config/sublime-text
 
 #### Atom
 Navigate to your `snippets.cson` file by either opening `~/.atom/snippets.cson`
-directly or by selecting the `Atom > Open Your Snippets` menu. You can then add 
+directly or by selecting the `Atom > Open Your Snippets` menu. You can then add
 this code snippet to the bottom and save the file:
 ```
 '.source.go':
@@ -93,16 +95,6 @@ this code snippet to the bottom and save the file:
 
 #### Vim
 TBD Somebody send me a PR, please.
-
-
-### Easy Log Tailing
-
-Put this alias in your shell config right meow!
-```
-alias qq=". $GOPATH/src/github.com/y0ssar1an/qq/qq.sh"
-```
-
-It's common to dedicate a terminal to just tailing `qq.log`.
 
 ## Advanced Usage
 
