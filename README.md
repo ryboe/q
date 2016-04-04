@@ -100,11 +100,11 @@ TBD Somebody send me a PR, please.
 
 Everything works just like the [`log` package](https://golang.org/pkg/log/).
 
-### The Full Docs
+#### The Full Docs
 
 [https://godoc.org/github.com/y0ssar1an/qq](https://godoc.org/github.com/y0ssar1an/qq)
 
-### Customize the Header Line
+#### Customize the Header Line
 
 `qq` uses the same flags as the `log` package, with the addition of `Lfuncname`
 
@@ -112,7 +112,7 @@ Everything works just like the [`log` package](https://golang.org/pkg/log/).
 qq.SetFlags(LUTC | Llongfile | Lmicroseconds | Lfuncname)`
 ```
 
-### Use Multiple Log Files
+#### Use Multiple Log Files
 
 Create a separate `Logger` associated with the new file. Don't worry about
 opening and closing the log file. `qq` will take care of that.
@@ -122,7 +122,7 @@ myqq := qq.New("/tmp/myqq.log", "", LstdFlags)
 myqq.Log("herpa derp")
 ```
 
-### Set a Prefix
+#### Set a Prefix
 ```go
 qq.SetPrefix("main goroutine")
 ```
