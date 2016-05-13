@@ -1,17 +1,20 @@
-#!/bin/sh
-qqlog="qq.log"
-QQ="$TMPDIR$qqlog"
-if [ $TMPDIR = "" ]; then
+#!/bin/env bash
+set -euo pipefail
+
+logfile="qq.log"
+logpath="$TMPDIR$logfile"
+
+if [ "$TMPDIR" = "" ]; then
 	if [ -f "/system/bin/adb" ]; then
 		# android
-		QQ="/data/local/tmp/$qqlog"
+		logpath="/data/local/tmp/$logfile"
 	else
-		QQ="/tmp/$qqlog"
+		logpath="/tmp/$logfile"
 	fi
 fi
 
-if [ ! -f $QQ ]; then
-	touch $QQ
+if [ ! -f $logpath ]; then
+	touch $logpath
 fi
 
-tail -100f $QQ
+tail -100f $logpath
