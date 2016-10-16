@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-qq.Log(${1})
+q.Q($1) // DEBUG
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>qq</tabTrigger>

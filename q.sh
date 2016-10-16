@@ -1,11 +1,11 @@
-#!/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
-logfile="qq.log"
-logpath="$TMPDIR$logfile"
+logfile="q"
+logpath=$TMPDIR$logfile
 
-if [ "$TMPDIR" = "" ]; then
-	if [ -f "/system/bin/adb" ]; then
+if [[ $TMPDIR == "" ]]; then
+	if [[ -e "/system/bin/adb" ]]; then
 		# android
 		logpath="/data/local/tmp/$logfile"
 	else
@@ -13,7 +13,7 @@ if [ "$TMPDIR" = "" ]; then
 	fi
 fi
 
-if [ ! -f $logpath ]; then
+if [[ ! -f $logpath ]]; then
 	touch $logpath
 fi
 

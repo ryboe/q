@@ -1,21 +1,25 @@
-package qq
+package q
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"runtime"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/kr/pretty"
 )
 
 // argName returns the source text of the given argument if it's a variable or
 // an expression. If the argument is something else, like a literal, argName
 // returns an empty string.
 func argName(arg ast.Expr) string {
-	name := noName
+	name := ""
 	switch a := arg.(type) {
 	case *ast.Ident:
 		if a.Obj.Kind == ast.Var {
@@ -35,11 +39,11 @@ func argName(arg ast.Expr) string {
 	return name
 }
 
-// argNames finds the qq.Log() call at the given filename/line number and
+// argNames finds the q.Q() call at the given filename/line number and
 // returns its arguments as a slice of strings. If the argument is a literal,
 // argNames will return an empty string at the index position of that argument.
-// For example, qq.Log(ip, port, 5432) would return []string{"ip", "port", ""}.
-// argNames returns a non-nil error if the source text cannot be parsed.
+// For example, q.Q(ip, port, 5432) would return []string{"ip", "port", ""}.
+// argNames returns an error if the source text cannot be parsed.
 func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, 0)
@@ -51,16 +55,18 @@ func argNames(filename string, line int) ([]string, error) {
 	ast.Inspect(f, func(n ast.Node) bool {
 		call, is := n.(*ast.CallExpr)
 		if !is {
+			// The node is not a function call.
 			return true // visit next node
 		}
 
-		// is a function call, but on wrong line
 		if fset.Position(call.End()).Line != line {
+			// The node is a function call, but it's on the wrong line.
 			return true
 		}
 
-		// is a function call on correct line, but not a qq function
-		if !qqCall(call) {
+		if !isQCall(call) {
+			// The node is a function call on correct line, but it's not a Q()
+			// function.
 			return true
 		}
 
@@ -100,24 +106,36 @@ func exprToString(arg ast.Expr) string {
 	return strings.Replace(buf.String(), "\t", "    ", -1)
 }
 
-// formatArgs converts a slice of interface{} args to %#v strings colored cyan.
-func formatArgs(args []interface{}) []string {
+// formatArgs converts the given args to pretty-printed, colorized strings.
+func formatArgs(args ...interface{}) []string {
 	formatted := make([]string, 0, len(args))
 	for _, a := range args {
-		s := fmt.Sprintf("%#v", a)
-		s = colorize(s, cyan)
+		s := colorize(pretty.Sprint(a), cyan)
 		formatted = append(formatted, s)
 	}
 	return formatted
 }
 
+// getCallerInfo returns the name, file, and line number of the function calling
+// q.Q().
+func getCallerInfo() (funcName, file string, line int, err error) {
+	const callDepth = 2 // user code calls q.Q() which calls std.log().
+	pc, file, line, ok := runtime.Caller(callDepth)
+	if !ok {
+		return "", "", 0, errors.New("failed to get info about the function calling q.Q")
+	}
+
+	funcName = runtime.FuncForPC(pc).Name()
+	return funcName, file, line, nil
+}
+
 // prependArgName turns argument names and values into name=value strings, e.g.
 // "port=443", "3+2=5". If the name is given, it will be bolded using ANSI
-// escape codes. If no name is given, just the value will be returned.
+// color codes. If no name is given, just the value will be returned.
 func prependArgName(names, values []string) []string {
 	prepended := make([]string, len(values))
 	for i, name := range names {
-		if name == noName {
+		if name == "" {
 			prepended[i] = values[i]
 			continue
 		}
@@ -127,9 +145,24 @@ func prependArgName(names, values []string) []string {
 	return prepended
 }
 
-// qqCall returns true if the given function call expression is for a qq
-// function, e.g. qq.Log().
-func qqCall(n *ast.CallExpr) bool {
+// isQCall returns true if the given function call expression is Q() or q.Q().
+func isQCall(n *ast.CallExpr) bool {
+	return isQFunction(n) || isQPackage(n)
+}
+
+// isQFunction returns true if the given function call expression is Q().
+func isQFunction(n *ast.CallExpr) bool {
+	ident, is := n.Fun.(*ast.Ident)
+	if !is {
+		return false
+	}
+	return ident.Name == "Q"
+}
+
+// isQPackage returns true if the given function call expression is in the q
+// package. Since Q() is the only exported function from the q package, this is
+// sufficient for determining that we've found Q() in the source text.
+func isQPackage(n *ast.CallExpr) bool {
 	sel, is := n.Fun.(*ast.SelectorExpr) // SelectorExpr example: a.B()
 	if !is {
 		return false
@@ -140,5 +173,5 @@ func qqCall(n *ast.CallExpr) bool {
 		return false
 	}
 
-	return ident.Name == "qq"
+	return ident.Name == "q"
 }
