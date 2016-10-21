@@ -75,8 +75,8 @@ func (l *logger) header(funcName, file string, line int) string {
 	l.lastFunc = funcName
 	l.lastFile = file
 
-	now := time.Now().Format("15:04:05")
-	return fmt.Sprintf("[%s %s %s:%d]", now, file, funcName, line)
+	now := time.Now().UTC().Format("15:04:05")
+	return fmt.Sprintf("[%s %s:%d %s]", now, file, line, funcName)
 }
 
 // resetTimer resets the logger's timer to the given time. It returns true if
