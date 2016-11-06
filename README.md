@@ -11,7 +11,7 @@ Type `q.Q` instead of `fmt.Printf` and your variables will be printed like this:
 * Faster to type
 * Pretty-printed vars and expressions
 * Easier to see inside structs
-* Doesn't go to noisy-ass stdout. It goes to `/tmp/q`.
+* Doesn't go to noisy-ass stdout. It goes to `$TMPDIR/q`.
 * Pretty colors!
 
 ## Basic Usage
@@ -28,7 +28,7 @@ import . "github.com/y0ssar1an/q"
 Q(a, b, c)
 ```
 
-For best results, dedicate a terminal to tailing `/tmp/q` while you work.
+For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 
 ## Install
 
@@ -36,19 +36,20 @@ For best results, dedicate a terminal to tailing `/tmp/q` while you work.
 go get -u github.com/y0ssar1an/q
 ```
 
-Put this alias in your shell config. Typing `qq` will then start tailing
-`/tmp/q`.
+Put these aliases in your shell config. Typing `qq` will then start tailing
+`$TMPDIR/q`.
 ```sh
 alias qq=". $GOPATH/src/github.com/y0ssar1an/q/q.sh"
+alias rmqq="rm $TMPDIR/q"
 ```
 
 ## Haven't I seen this somewhere before?
 
-Python programmers will recognize this as a Golang port of the awesome
+Python programmers will recognize this as a Golang port of the
 [`q` module by zestyping](https://github.com/zestyping/q).
 
 Ping does a great job of explaining `q` in his awesome lightning talk from
-PyCon 2013. Watch it! It's funny!
+PyCon 2013. Watch it! It's funny :)
 
 [![ping's PyCon 2013 lightning talk](https://i.imgur.com/7KmWvtG.jpg)](https://youtu.be/OL3De8BAhME?t=25m14s)
 
@@ -57,5 +58,5 @@ PyCon 2013. Watch it! It's funny!
 ### Why `q.Q`?
 It's quick to type and unlikely to cause naming collisions.
 
-### Is `q.Q()` concurrency safe?
+### Is `q.Q()` safe for concurrent use?
 Yes
