@@ -4,7 +4,7 @@ set -euo pipefail
 logfile="q"
 logpath=$TMPDIR$logfile
 
-if [[ $TMPDIR == "" ]]; then
+if [[ -z "$TMPDIR" ]]; then
 	if [[ -e "/system/bin/adb" ]]; then
 		# android
 		logpath="/data/local/tmp/$logfile"
@@ -13,7 +13,7 @@ if [[ $TMPDIR == "" ]]; then
 	fi
 fi
 
-if [[ ! -f $logpath ]]; then
+if [[ ! -f "$logpath" ]]; then
 	touch $logpath
 fi
 
