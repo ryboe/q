@@ -64,7 +64,7 @@ this code snippet to the bottom and save the file:
     'prefix': 'qq'
     'body': 'q.Q($1)'
 ```
-### vim/Emacs/VSCode
+#### vim/Emacs/VSCode
 TBD Send me a PR, please :)
 
 ## Haven't I seen this somewhere before?
