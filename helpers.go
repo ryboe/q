@@ -48,7 +48,7 @@ func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, 0)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse %q: %v", filename, err)
 	}
 
 	var names []string
@@ -102,7 +102,7 @@ func exprToString(arg ast.Expr) string {
 	printer.Fprint(&buf, fset, arg)
 
 	// CallExpr will be multi-line and indented with tabs. replace tabs with
-	// spaces so we can better control formatting during output()
+	// spaces so we can better control formatting during output().
 	return strings.Replace(buf.String(), "\t", "    ", -1)
 }
 

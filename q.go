@@ -33,7 +33,7 @@ const (
 	maxLineWidth = 80
 )
 
-// The standard q logger
+// The q logger singleton
 var std *logger
 
 // logger writes pretty logs to the $TMPDIR/q file. It takes care of opening and
@@ -94,13 +94,13 @@ func (l *logger) flush() error {
 	path := filepath.Join(os.TempDir(), "q")
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open %q: %v", path, err)
 	}
 	defer f.Close()
 
 	_, err = io.Copy(f, l.buf)
 	l.buf.Reset()
-	return err
+	return fmt.Errorf("failed to flush q buffer: %v", err)
 }
 
 // output writes to the log buffer. Each log message is prepended with a
