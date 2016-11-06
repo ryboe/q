@@ -70,7 +70,16 @@ func (l *logger) header(funcName, file string, line int) string {
 	l.lastFile = file
 
 	now := time.Now().UTC().Format("15:04:05")
-	return fmt.Sprintf("[%s %s:%d %s]", now, file, line, funcName)
+
+	return fmt.Sprintf("[%s %s:%d %s]", now, shortFile(file), line, funcName)
+}
+
+// shortFile takes an absolute file path and returns just the <directory>/<file>,
+// e.g. "foo/bar.go".
+func shortFile(file string) string {
+	dir := filepath.Base(filepath.Dir(file))
+	file = filepath.Base(file)
+	return filepath.Join(dir, file)
 }
 
 // resetTimer resets the logger's timer to the given time. It returns true if
