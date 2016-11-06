@@ -82,11 +82,20 @@ func argNames(filename string, line int) ([]string, error) {
 // argWidth returns the number of characters that will be seen when the given
 // argument is printed at the terminal.
 func argWidth(arg string) int {
-	width := utf8.RuneCountInString(arg) - len(cyan) - len(endColor)
-	if strings.HasPrefix(arg, string(bold)) {
-		width -= len(bold) + len(endColor)
-	}
-	return width
+	// Strip zero-width characters.
+	replacer := strings.NewReplacer(
+		"\n", "",
+		"\t", "",
+		"\r", "",
+		"\f", "",
+		"\v", "",
+		string(bold), "",
+		string(yellow), "",
+		string(cyan), "",
+		string(endColor), "",
+	)
+	s := replacer.Replace(arg)
+	return utf8.RuneCountInString(s)
 }
 
 // colorize returns the given text encapsulated in ANSI escape codes that
