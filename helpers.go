@@ -22,7 +22,7 @@ func argName(arg ast.Expr) string {
 	name := ""
 	switch a := arg.(type) {
 	case *ast.Ident:
-		if a.Obj.Kind == ast.Var {
+		if a.Obj.Kind == ast.Var || a.Obj.Kind == ast.Con {
 			name = a.Obj.Name
 		}
 	case *ast.BinaryExpr,
