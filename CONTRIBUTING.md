@@ -12,6 +12,4 @@ Please submit all PRs to the `develop` branch, not `master`.
 
 ## Submission Checklist
 
-- [ ] gofmt -s -d produces no output
-- [ ] no issues in go vet
-- [ ] no issues in golint
+- [ ] `gofmt -s -l .` produces no output

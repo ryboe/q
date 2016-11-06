@@ -13,6 +13,7 @@ before_install:
 script:
   # $pkgs avoids testing anything in vendor/
   - pkgs=$(go list ./... | grep -v /vendor/)
+  - test -z $(gofmt -s -l .)
   - go test -v -race $pkgs
   - go vet $pkgs
   - staticcheck $pkgs

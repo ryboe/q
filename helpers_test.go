@@ -98,7 +98,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 								Results: &ast.FieldList{
 									Opening: 0,
 									List: []*ast.Field{
-										&ast.Field{
+										{
 											Doc:   nil,
 											Names: nil,
 											Type: &ast.Ident{
@@ -295,7 +295,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 						Decl: &ast.ValueSpec{
 							Doc: nil,
 							Names: []*ast.Ident{
-								&ast.Ident{
+								{
 									NamePos: 34,
 									Name:    "a",
 									Obj:     &ast.Object{},
