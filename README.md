@@ -1,4 +1,5 @@
 # q
+[![Build Status](https://travis-ci.org/y0ssar1an/q.svg?branch=develop)](https://travis-ci.org/y0ssar1an/q)
 
 q is a better way to do print statement debugging.
 
