@@ -60,9 +60,9 @@ directly or by selecting the `Atom > Open Your Snippets` menu. You can then add
 this code snippet to the bottom and save the file:
 ```
 '.source.go':
-  'qq log':
+  'q log':
     'prefix': 'qq'
-    'body': 'qq.Log($1)'
+    'body': 'q.Q($1)'
 ```
 ### vim/Emacs/VSCode
 TBD Send me a PR, please :)
