@@ -64,7 +64,22 @@ this code snippet to the bottom and save the file:
     'prefix': 'qq'
     'body': 'q.Q($1)'
 ```
-#### vim/Emacs/VSCode
+
+#### VSCODE
+In the VSCODE menu go to `Preferences` and choose `User Snippets`.
+When the language dropdown menu appears select `GO`.
+Add the following snippet to the array of snippets.
+```
+"q.Q ": {
+  "prefix": "qq",
+    "body": [
+      "q.Q($1)"
+    ],
+    "description": "Quick and dirty debugging output for tired Go programmers"
+  }
+```
+
+#### vim/Emacs
 TBD Send me a PR, please :)
 
 ## Haven't I seen this somewhere before?
