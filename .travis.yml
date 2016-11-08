@@ -5,6 +5,9 @@ matrix:
     - go: 1.6
     - go: 1.7
 
+notifcations:
+  email: false
+
 before_install:
   - go get -u honnef.co/go/staticcheck/cmd/staticcheck
   - go get -u honnef.co/go/simple/cmd/gosimple
