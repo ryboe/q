@@ -2,7 +2,7 @@
 set -euo pipefail
 
 logfile="q"
-logpath=$TMPDIR$logfile
+logpath=$TMPDIR/$logfile
 
 if [[ -z "$TMPDIR" ]]; then
 	if [[ -e "/system/bin/adb" ]]; then

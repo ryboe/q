@@ -25,6 +25,7 @@ const (
 	endColor color = "\033[0m" // "reset everything"
 
 	maxLineWidth = 80
+	bufSize      = 16384
 )
 
 // The q logger singleton
@@ -48,8 +49,10 @@ func init() {
 	t := time.NewTimer(0)
 	t.Stop()
 
+	buf := &bytes.Buffer{}
+	buf.Grow(bufSize)
 	std = &logger{
-		buf:   &bytes.Buffer{},
+		buf:   buf,
 		timer: t,
 	}
 }
