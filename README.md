@@ -70,7 +70,7 @@ In the VS Code menu go to `Preferences` and choose `User Snippets`. When the
 language dropdown menu appears select `GO`. Add the following snippet to the
 array of snippets.
 ```
-"q.Q ": {
+"q.Q": {
 	"prefix": "qq",
 	"body": [
 		"q.Q($1)"
@@ -98,4 +98,4 @@ PyCon 2013. Watch it! It's funny :)
 It's quick to type and unlikely to cause naming collisions.
 
 ### Is `q.Q()` safe for concurrent use?
-Yes
+Yes.
