@@ -38,13 +38,7 @@ For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 
 ```sh
 go get -u github.com/y0ssar1an/q
-```
-
-Put these aliases in your shell config. Typing `qq` will then start tailing
-`$TMPDIR/q`.
-```sh
-alias qq=". $GOPATH/src/github.com/y0ssar1an/q/q.sh"
-alias rmqq="rm $TMPDIR/q"
+cd $GOPATH/src/github.com/y0ssar1an/q && go get ./...
 ```
 
 ## Editor Integration
