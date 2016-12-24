@@ -19,17 +19,45 @@ type color string
 
 const (
 	// ANSI color escape codes
-	bold     color = "\033[1m"
-	yellow   color = "\033[33m"
-	cyan     color = "\033[36m"
-	endColor color = "\033[0m" // "reset everything"
-
-	maxLineWidth = 80
-	bufSize      = 16384
+	bold         color = "\033[1m"
+	yellow       color = "\033[33m"
+	cyan         color = "\033[36m"
+	endColor     color = "\033[0m" // "reset everything"
+	OutEnv             = "OUT"
+	maxLineWidth       = 80
+	bufSize            = 16384
 )
 
 // The q logger singleton
 var std *logger
+
+type flusher interface {
+	Flush(*bytes.Buffer) error
+}
+
+type fileFlusher struct {
+}
+
+func (ff fileFlusher) Flush(buf *bytes.Buffer) error {
+	path := filepath.Join(os.TempDir(), "q")
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to open %q: %v", path, err)
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, buf)
+	buf.Reset()
+	return fmt.Errorf("failed to flush q buffer: %v", err)
+}
+
+type stdOutFlusher struct{}
+
+func (sf stdOutFlusher) Flush(buf *bytes.Buffer) error {
+	fmt.Printf(buf.String())
+	buf.Reset()
+	return nil
+}
 
 // logger writes pretty logs to the $TMPDIR/q file. It takes care of opening and
 // closing the file. It is safe for concurrent use.
@@ -40,6 +68,7 @@ type logger struct {
 	timer    *time.Timer   // when it gets to 0, start a new log group
 	lastFile string        // last file to call q.Q(). determines when to print header
 	lastFunc string        // last function to call q.Q()
+	flusher  flusher
 }
 
 // init creates the standard logger.
@@ -52,8 +81,14 @@ func init() {
 	buf := &bytes.Buffer{}
 	buf.Grow(bufSize)
 	std = &logger{
-		buf:   buf,
-		timer: t,
+		buf:     buf,
+		timer:   t,
+		flusher: fileFlusher{},
+	}
+	if os.Getenv(OutEnv) == "stdout" {
+		std.flusher = stdOutFlusher{}
+	} else {
+		std.flusher = fileFlusher{}
 	}
 }
 
@@ -97,16 +132,7 @@ func (l *logger) resetTimer(d time.Duration) (expired bool) {
 
 // flush writes the logger's buffer to disk.
 func (l *logger) flush() error {
-	path := filepath.Join(os.TempDir(), "q")
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		return fmt.Errorf("failed to open %q: %v", path, err)
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, l.buf)
-	l.buf.Reset()
-	return fmt.Errorf("failed to flush q buffer: %v", err)
+	return l.flusher.Flush(l.buf)
 }
 
 // output writes to the log buffer. Each log message is prepended with a
