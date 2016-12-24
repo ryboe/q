@@ -1,11 +1,9 @@
 language: go
 
-matrix:
-  - include:
-    - go: 1.6
-    - go: 1.7
+go:
+  - 1.7
 
-notifcations:
+notifications:
   email: false
 
 before_install:
