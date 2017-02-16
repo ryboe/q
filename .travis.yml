@@ -2,14 +2,16 @@ language: go
 
 go:
   - 1.7
+  - 1.8
 
 notifications:
   email: false
 
 before_install:
-  - go get -u honnef.co/go/staticcheck/cmd/staticcheck
-  - go get -u honnef.co/go/simple/cmd/gosimple
   - go get -u github.com/golang/lint/golint
+  - go get -u honnef.co/go/tools/cmd/gosimple
+  - go get -u honnef.co/go/tools/cmd/staticcheck
+  - go get -u honnef.co/go/tools/cmd/unused
 
 script:
   # $pkgs avoids testing anything in vendor/
@@ -19,4 +21,5 @@ script:
   - go vet $pkgs
   - staticcheck $pkgs
   - gosimple $pkgs
+  - unused $pkgs
   - golint $pkgs
