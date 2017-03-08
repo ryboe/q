@@ -1,0 +1,21 @@
+{
+    "memo": "429f02b649ab1e233ece85dbfa3f27e035b962322f06cdf12461547744c2e513",
+    "projects": [
+        {
+            "name": "github.com/kr/pretty",
+            "branch": "master",
+            "revision": "cfb55aafdaf3ec08f0db22699ab822c50091b1c4",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/kr/text",
+            "branch": "master",
+            "revision": "7cafcd837844e784b526369c9bce262804aebc60",
+            "packages": [
+                "."
+            ]
+        }
+    ]
+}
