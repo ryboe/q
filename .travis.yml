@@ -14,9 +14,9 @@ before_install:
   - go get -u honnef.co/go/tools/cmd/unused
 
 script:
-  # $pkgs avoids testing anything in vendor/
+  - go_files=$(find . -iname '*.go' | grep -v /vendor/)
   - pkgs=$(go list ./... | grep -v /vendor/)
-  - test -z $(gofmt -s -l .)
+  - test -z $(gofmt -s -l $go_files)
   - go test -v -race $pkgs
   - go vet $pkgs
   - staticcheck $pkgs
