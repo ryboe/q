@@ -51,7 +51,7 @@ alias rmqq="rm $TMPDIR/q"
 
 #### Sublime Text
 ```
-cp $GOPATH/src/github.com/y0ssar1an/q/qq.sublime-snippet Packages/User/qq.sublime-snippet
+cp $GOPATH/src/github.com/y0ssar1an/q/qq.sublime-snippet $YOUR_SUBLIME_PACKAGES_DIR/User/qq.sublime-snippet
 ```
 
 #### Atom
