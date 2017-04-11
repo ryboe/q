@@ -3,23 +3,28 @@ language: go
 go:
   - 1.7
   - 1.8
+  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+  # don't wait for tip tests to finish, since they're allowed to fail
+  fast_finish: true
 
 notifications:
   email: false
 
-before_install:
-  - go get -u github.com/golang/lint/golint
-  - go get -u honnef.co/go/tools/cmd/gosimple
-  - go get -u honnef.co/go/tools/cmd/staticcheck
-  - go get -u honnef.co/go/tools/cmd/unused
+before_script:
+  - GO_FILES=$(find . -iname '*.go' | grep -v /vendor/)
+  - PKGS=$(go list ./... | grep -v /vendor/)
+  - go get github.com/golang/lint/golint
+  - go get honnef.co/go/tools/cmd/{gosimple,staticcheck,unused}
 
 script:
-  - go_files=$(find . -iname '*.go' | grep -v /vendor/)
-  - pkgs=$(go list ./... | grep -v /vendor/)
-  - test -z $(gofmt -s -l $go_files)
-  - go test -v -race $pkgs
-  - go vet $pkgs
-  - staticcheck $pkgs
-  - gosimple $pkgs
-  - unused $pkgs
-  - golint $pkgs
+  - test -z $(gofmt -s -l $GO_FILES)
+  - go test -v -race $PKGS
+  - go vet $PKGS
+  - staticcheck $PKGS
+  - gosimple $PKGS
+  - unused $PKGS
+  - golint $PKGS
