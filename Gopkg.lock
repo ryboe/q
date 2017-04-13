@@ -1,0 +1,13 @@
+memo = "c0640caa545e4b9d0810f0d8693b4f1760b5a4f1d69ff6af0027cb39a6186f3a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kr/pretty"
+  packages = ["."]
+  revision = "cfb55aafdaf3ec08f0db22699ab822c50091b1c4"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kr/text"
+  packages = ["."]
+  revision = "7cafcd837844e784b526369c9bce262804aebc60"
