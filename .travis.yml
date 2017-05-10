@@ -27,4 +27,4 @@ script:
   - staticcheck $PKGS
   - gosimple $PKGS
   - unused $PKGS
-  - golint $PKGS
+  - golint -set_exit_status $PKGS
