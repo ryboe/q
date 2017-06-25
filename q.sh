@@ -14,7 +14,7 @@ if [[ -z "$TMPDIR" ]]; then
 fi
 
 if [[ ! -f "$logpath" ]]; then
-	touch -- "$logpath"
+    echo 'Q LOG' > "$logpath"
 fi
 
 tail -100f -- "$logpath"

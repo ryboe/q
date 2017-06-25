@@ -40,11 +40,19 @@ For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 go get -u github.com/y0ssar1an/q
 ```
 
-Put these aliases in your shell config. Typing `qq` will then start tailing
-`$TMPDIR/q`.
+Put these functions in your shell config. Typing `qq` or `rmqq` will then start
+tailing `$TMPDIR/q`.
 ```sh
-qq() { local gop="${GOPATH:-$HOME/go}"; "${gop%%:*}/src/github.com/y0ssar1an/q/q.sh" "$@";}
-rmqq() { rm -v -- "$TMPDIR/q" ; }
+qq() {
+    local gpath="${GOPATH:-$HOME/go}"
+    "${gpath%%:*}/src/github.com/y0ssar1an/q/q.sh" "$@"
+}
+rmqq() {
+    if [[ -f "$TMPDIR/q" ]]; then
+        rm "$TMPDIR/q"
+    fi
+    qq
+}
 ```
 
 ## Editor Integration
