@@ -5,6 +5,9 @@ go:
   - 1.8
   - tip
 
+# skip the install step. don't `go get` deps. only build with code in vendor/
+install: true
+
 matrix:
   allow_failures:
     - go: tip
