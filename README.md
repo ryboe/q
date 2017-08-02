@@ -23,19 +23,17 @@ Type `q.Q` instead of `fmt.Printf` and your variables will be printed like this:
 import "github.com/y0ssar1an/q"
 ...
 q.Q(a, b, c)
-
+```
+```go
 // Alternatively, use the . import and you can omit the package name.
-// q only exports the Q function.
 import . "github.com/y0ssar1an/q"
 ...
 Q(a, b, c)
 ```
 
-
 For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 
 ## Install
-
 ```sh
 go get -u github.com/y0ssar1an/q
 ```
@@ -57,41 +55,41 @@ rmqq() {
 
 ## Editor Integration
 
-#### Sublime Text
+#### VS Code
+`Preferences > User Snippets > Go`
+```json
+"qq": {
+    "prefix": "qq",
+    "body": "q.Q($1) // DEBUG",
+    "description": "Pretty-print to $TMPDIR/q"
+}
 ```
-cp $GOPATH/src/github.com/y0ssar1an/q/qq.sublime-snippet $YOUR_SUBLIME_PACKAGES_DIR/User/qq.sublime-snippet
+
+#### Sublime Text
+`Tools > Developer > New Snippet`
+```xml
+<snippet>
+    <content><![CDATA[
+q.Q($1) // DEBUG
+]]></content>
+    <tabTrigger>qq</tabTrigger>
+    <scope>source.go</scope>
+</snippet>
 ```
 
 #### Atom
-Navigate to your `snippets.cson` file by either opening `~/.atom/snippets.cson`
-directly or by selecting the `Atom > Open Your Snippets` menu. You can then add
-this code snippet to the bottom and save the file:
-```
+`Atom > Open Your Snippets`
+```coffee
 '.source.go':
-  'q log':
-    'prefix': 'qq'
-    'body': 'q.Q($1)'
-```
-
-#### VS Code
-In the VS Code menu go to `Preferences` and choose `User Snippets`. When the
-language dropdown menu appears select `GO`. Add the following snippet to the
-array of snippets.
-```
-"q.Q": {
-	"prefix": "qq",
-	"body": [
-		"q.Q($1)"
-	],
-	"description": "Quick and dirty debugging output for tired Go programmers"
-}
+    'qq':
+        'prefix': 'qq'
+        'body': 'q.Q($1) // DEBUG'
 ```
 
 #### vim/Emacs
 TBD Send me a PR, please :)
 
 ## Haven't I seen this somewhere before?
-
 Python programmers will recognize this as a Golang port of the
 [`q` module by zestyping](https://github.com/zestyping/q).
 
