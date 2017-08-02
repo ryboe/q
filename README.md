@@ -42,6 +42,7 @@ Put these functions in your shell config. Typing `qq` or `rmqq` will then start
 tailing `$TMPDIR/q`.
 ```sh
 qq() {
+    clear
     local gpath="${GOPATH:-$HOME/go}"
     "${gpath%%:*}/src/github.com/y0ssar1an/q/q.sh" "$@"
 }
