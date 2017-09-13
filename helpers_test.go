@@ -336,6 +336,15 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 			},
 			want: "-1",
 		},
+		{
+			id: 16,
+			arg: &ast.Ident{
+				NamePos: 65,
+				Name:    "string",
+				Obj:     nil,
+			},
+			want: "string",
+		},
 	}
 
 	// We can test both exprToString() and argName() with the test cases above.
