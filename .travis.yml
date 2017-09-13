@@ -1,8 +1,7 @@
 language: go
 
 go:
-  - 1.7
-  - 1.8
+  - 1.9
   - tip
 
 # skip the install step. don't `go get` deps. only build with code in vendor/
@@ -18,14 +17,13 @@ notifications:
   email: false
 
 before_script:
-  - GO_FILES=$(find . -iname '*.go' | grep -v /vendor/)
-  - PKGS=$(go list ./... | grep -v /vendor/)
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
   - go get github.com/golang/lint/golint
   - go get honnef.co/go/tools/cmd/megacheck
 
 script:
   - test -z $(gofmt -s -l $GO_FILES)
-  - go test -v -race $PKGS
-  - go vet $PKGS
-  - megacheck $PKGS
-  - golint -set_exit_status $PKGS
+  - go test -v -race ./...
+  - go vet ./...
+  - megacheck ./...
+  - golint -set_exit_status $(go list ./... | grep -v /vendor/)
