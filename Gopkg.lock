@@ -3,6 +3,24 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/fzipp/gocyclo"
+  packages = ["."]
+  revision = "6acd4345c835499920e8426c7e4e8d7a34f1bb83"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/lint"
+  packages = [".","golint"]
+  revision = "6aaf7c34af0f4c36a57e0c429bace4d706d8e931"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kisielk/gotool"
+  packages = [".","internal/load"]
+  revision = "d6ce6262d87e3a4e153e86023ff56ae771554a41"
+
+[[projects]]
+  branch = "master"
   name = "github.com/kr/pretty"
   packages = ["."]
   revision = "cfb55aafdaf3ec08f0db22699ab822c50091b1c4"
@@ -13,9 +31,21 @@
   packages = ["."]
   revision = "7cafcd837844e784b526369c9bce262804aebc60"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = ["go/ast/astutil","go/buildutil","go/gcexportdata","go/gcimporter15","go/loader","go/types/typeutil"]
+  revision = "6d70fb2e85323e81c89374331d3d2b93304faa36"
+
+[[projects]]
+  name = "honnef.co/go/tools"
+  packages = ["callgraph","callgraph/static","cmd/megacheck","deprecated","functions","internal/sharedcheck","lint","lint/lintutil","simple","ssa","ssa/ssautil","staticcheck","staticcheck/vrp","unused","version"]
+  revision = "444f7b0ef8e620c384da646182663eb4f0f14ffe"
+  version = "2017.2.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c0640caa545e4b9d0810f0d8693b4f1760b5a4f1d69ff6af0027cb39a6186f3a"
+  inputs-digest = "7877684fa3366d6e7046dd76c64760155d01cfeb3c4a47fbecc3965de70ad842"
   solver-name = "gps-cdcl"
   solver-version = 1

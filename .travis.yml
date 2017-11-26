@@ -1,29 +1,28 @@
 language: go
 
 go:
-  - 1.9
-  - tip
+  - 1.9.x
 
 # skip the install step. don't `go get` deps. only build with code in vendor/
 install: true
 
-matrix:
-  allow_failures:
-    - go: tip
-  # don't wait for tip tests to finish, since they're allowed to fail
-  fast_finish: true
-
 notifications:
   email: false
 
+# install code checkers
 before_script:
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-  - go get github.com/golang/lint/golint
-  - go get honnef.co/go/tools/cmd/megacheck
+  - cd vendor/github.com/golang/lint/golint
+  - go install
+  - cd -
+  - cd vendor/honnef.co/go/tools/cmd/megacheck
+  - go install
+  - cd -
 
 script:
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
   - test -z $(gofmt -s -l $GO_FILES)
   - go test -v -race ./...
   - go vet ./...
   - megacheck ./...
+  # golint ./... doesn't ignore vendor/ for some dumb reason
   - golint -set_exit_status $(go list ./... | grep -v /vendor/)
