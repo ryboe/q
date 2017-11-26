@@ -1,0 +1,5 @@
+required = [
+	"github.com/fzipp/gocyclo",
+	"github.com/golang/lint/golint",
+	"honnef.co/go/tools/cmd/megacheck",
+]
