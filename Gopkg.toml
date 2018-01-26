@@ -3,3 +3,16 @@ required = [
 	"github.com/golang/lint/golint",
 	"honnef.co/go/tools/cmd/megacheck",
 ]
+
+[[constraint]]
+name = "github.com/fzipp/gocyclo"
+branch = "master"
+
+[[constraint]]
+name = "github.com/golang/lint"
+branch = "master"
+
+[prune]
+go-tests = true
+non-go = true
+unused-packages = true
