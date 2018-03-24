@@ -1,6 +1,7 @@
 required = [
 	"github.com/fzipp/gocyclo",
-	"github.com/golang/lint/golint",
+	"golang.org/x/lint",
+	"golang.org/x/lint/golint",
 	"honnef.co/go/tools/cmd/megacheck",
 ]
 
@@ -9,7 +10,7 @@ name = "github.com/fzipp/gocyclo"
 branch = "master"
 
 [[constraint]]
-name = "github.com/golang/lint"
+name = "golang.org/x/lint"
 branch = "master"
 
 [prune]
