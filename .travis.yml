@@ -17,12 +17,16 @@ before_script:
   - cd vendor/honnef.co/go/tools/cmd/megacheck
   - go install
   - cd -
+  - cd vendor/github.com/fzipp/gocyclo
+  - go install
+  - cd -
 
 script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-  - test -z $(gofmt -s -l $GO_FILES)
+  - test -z $(gofmt -s -l ${GO_FILES})
   - go test -v -race ./...
   - go vet ./...
   - megacheck ./...
   # golint ./... doesn't ignore vendor/ for some dumb reason
   - golint -set_exit_status $(go list ./... | grep -v /vendor/)
+  - gocyclo -over 10 ${GO_FILES}
