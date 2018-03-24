@@ -11,7 +11,7 @@ notifications:
 
 # install code checkers
 before_script:
-  - cd vendor/github.com/golang/lint/golint
+  - cd vendor/golang.org/x/lint/golint
   - go install
   - cd -
   - cd vendor/honnef.co/go/tools/cmd/megacheck

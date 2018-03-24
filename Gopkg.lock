@@ -8,22 +8,13 @@
   revision = "6acd4345c835499920e8426c7e4e8d7a34f1bb83"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/golang/lint"
-  packages = [
-    ".",
-    "golint"
-  ]
-  revision = "e14d9b0f1d332b1420c1ffa32562ad2dc84d645d"
-
-[[projects]]
-  branch = "master"
   name = "github.com/kisielk/gotool"
   packages = [
     ".",
     "internal/load"
   ]
-  revision = "d6ce6262d87e3a4e153e86023ff56ae771554a41"
+  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -39,6 +30,15 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/lint"
+  packages = [
+    ".",
+    "golint"
+  ]
+  revision = "85993ffd0a6cd043291f3f63d45d656d97b165bd"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -48,7 +48,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "25101aadb97aa42907eee6a238d6d26a6cb3c756"
+  revision = "4c0f0e48a635ba08a80fbebdb19258a0f675a910"
 
 [[projects]]
   name = "honnef.co/go/tools"
@@ -75,6 +75,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8affb7b5cc460e34b10774c525cf8bfcbb13290a47cf7f7a5e251df422fb540e"
+  inputs-digest = "f9817690650739b7e8cc7c487924fbe7043fc818348569fdb9050e440c080287"
   solver-name = "gps-cdcl"
   solver-version = 1
