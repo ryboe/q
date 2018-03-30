@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.10.x
+  - 1.x
 
 # skip the install step. don't `go get` deps. only build with code in vendor/
 install: true
