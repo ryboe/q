@@ -2,79 +2,20 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/fzipp/gocyclo"
-  packages = ["."]
-  revision = "6acd4345c835499920e8426c7e4e8d7a34f1bb83"
-
-[[projects]]
-  name = "github.com/kisielk/gotool"
-  packages = [
-    ".",
-    "internal/load"
-  ]
-  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
-  version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
   name = "github.com/kr/pretty"
   packages = ["."]
-  revision = "cfb55aafdaf3ec08f0db22699ab822c50091b1c4"
+  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/kr/text"
   packages = ["."]
-  revision = "7cafcd837844e784b526369c9bce262804aebc60"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/lint"
-  packages = [
-    ".",
-    "golint"
-  ]
-  revision = "85993ffd0a6cd043291f3f63d45d656d97b165bd"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/gcexportdata",
-    "go/gcimporter15",
-    "go/loader",
-    "go/types/typeutil"
-  ]
-  revision = "4c0f0e48a635ba08a80fbebdb19258a0f675a910"
-
-[[projects]]
-  name = "honnef.co/go/tools"
-  packages = [
-    "callgraph",
-    "callgraph/static",
-    "cmd/megacheck",
-    "deprecated",
-    "functions",
-    "internal/sharedcheck",
-    "lint",
-    "lint/lintutil",
-    "simple",
-    "ssa",
-    "ssa/ssautil",
-    "staticcheck",
-    "staticcheck/vrp",
-    "unused",
-    "version"
-  ]
-  revision = "d73ab98e7c39fdcf9ba65062e43d34310f198353"
-  version = "2017.2.2"
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f9817690650739b7e8cc7c487924fbe7043fc818348569fdb9050e440c080287"
+  inputs-digest = "442f9b2f90f1fa3f24bd516e566ff7931c21438139f0077ad4f6d79fe1fdace6"
   solver-name = "gps-cdcl"
   solver-version = 1

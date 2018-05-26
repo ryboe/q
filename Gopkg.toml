@@ -1,19 +1,8 @@
-required = [
-	"github.com/fzipp/gocyclo",
-	"golang.org/x/lint",
-	"golang.org/x/lint/golint",
-	"honnef.co/go/tools/cmd/megacheck",
-]
-
 [[constraint]]
-name = "github.com/fzipp/gocyclo"
-branch = "master"
-
-[[constraint]]
-name = "golang.org/x/lint"
-branch = "master"
+  name = "github.com/kr/pretty"
+  version = "^0.1.0"
 
 [prune]
-go-tests = true
-non-go = true
-unused-packages = true
+  go-tests = true
+  non-go = true
+  unused-packages = true
