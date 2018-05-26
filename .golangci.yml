@@ -1,0 +1,19 @@
+run:
+  deadline: 1h
+  tests: true
+
+linters:
+  enable:
+    - gocyclo
+    - gofmt
+    - golint
+
+linters-settings:
+  gocyclo:
+    min-complexity: 11
+
+  gofmt:
+    simplify: true
+
+  golint:
+    min-confidence: 0.25  # ignore missing package comment false positive
