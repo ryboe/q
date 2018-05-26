@@ -96,17 +96,25 @@ func (l *logger) resetTimer(d time.Duration) (expired bool) {
 }
 
 // flush writes the logger's buffer to disk.
-func (l *logger) flush() error {
+func (l *logger) flush() (err error) {
 	path := filepath.Join(os.TempDir(), "q")
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open %q: %v", path, err)
 	}
-	defer f.Close()
+	defer func() {
+		if cerr := f.Close(); err == nil {
+			err = cerr
+		}
+	}()
 
 	_, err = io.Copy(f, l.buf)
 	l.buf.Reset()
-	return fmt.Errorf("failed to flush q buffer: %v", err)
+	if err != nil {
+		return fmt.Errorf("failed to flush q buffer: %v", err)
+	}
+
+	return nil
 }
 
 // output writes to the log buffer. Each log message is prepended with a
@@ -154,7 +162,11 @@ func Q(v ...interface{}) {
 	defer std.mu.Unlock()
 
 	// Flush the buffered writes to disk.
-	defer std.flush()
+	defer func() {
+		if err := std.flush(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
 	args := formatArgs(v...)
 	funcName, file, line, err := getCallerInfo()
