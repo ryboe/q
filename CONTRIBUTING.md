@@ -11,8 +11,4 @@ Your PR is more likely to be accepted if you open an issue first.
 
 ## Submission Checklist
 
-- [ ] `gofmt -s -l` produces no output
-- [ ] `go vet` produces no output
-- [ ] `megacheck` produces no output
-- [ ] `golint` produces no output
-- [ ] `go test -race` passes
+- [ ] `golangci-lint run` succeeds
