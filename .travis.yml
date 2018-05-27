@@ -11,8 +11,8 @@ notifications:
 
 # install linter
 before_script:
-  - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
 
 script:
-  - golangci-lint --concurrency $(nproc) run
+  - golangci-lint run
   - go test -v -race ./...
