@@ -6,6 +6,10 @@ language: go
 go:
   - 1.x
 
+# only clone the most recent commit
+git:
+  depth: 1
+
 # skip the install step. don't `go get` deps. only build with code in vendor/
 install: true
 
