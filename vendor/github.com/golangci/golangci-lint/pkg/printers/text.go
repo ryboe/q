@@ -2,14 +2,15 @@ package printers
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/sirupsen/logrus"
 )
 
 type linesCache [][]byte
@@ -19,16 +20,20 @@ type Text struct {
 	printIssuedLine bool
 	useColors       bool
 	printLinterName bool
+	silent          bool
 
 	cache filesCache
+	log   logutils.Log
 }
 
-func NewText(printIssuedLine, useColors, printLinterName bool) *Text {
+func NewText(printIssuedLine, useColors, printLinterName bool, silent bool, log logutils.Log) *Text {
 	return &Text{
 		printIssuedLine: printIssuedLine,
 		useColors:       useColors,
 		printLinterName: printLinterName,
+		silent:          silent,
 		cache:           filesCache{},
+		log:             log,
 	}
 }
 
@@ -58,10 +63,10 @@ func (p *Text) getFileLinesForIssue(i *result.Issue) (linesCache, error) {
 	return fc, nil
 }
 
-func (p *Text) Print(issues <-chan result.Issue) (bool, error) {
+func (p *Text) Print(ctx context.Context, issues <-chan result.Issue) (bool, error) {
 	var issuedLineExtractingDuration time.Duration
 	defer func() {
-		logrus.Infof("Extracting issued lines took %s", issuedLineExtractingDuration)
+		p.log.Infof("Extracting issued lines took %s", issuedLineExtractingDuration)
 	}()
 
 	issuesN := 0
@@ -86,11 +91,13 @@ func (p *Text) Print(issues <-chan result.Issue) (bool, error) {
 		}
 	}
 
-	if issuesN == 0 {
-		outStr := p.SprintfColored(color.FgGreen, "Congrats! No issues were found.")
-		fmt.Fprintln(StdOut, outStr)
-	} else {
-		logrus.Infof("Found %d issues", issuesN)
+	if issuesN != 0 {
+		p.log.Infof("Found %d issues", issuesN)
+	} else if ctx.Err() == nil { // don't print "congrats" if timeouted
+		if !p.silent {
+			outStr := p.SprintfColored(color.FgGreen, "Congrats! No issues were found.")
+			fmt.Fprintln(logutils.StdOut, outStr)
+		}
 	}
 
 	return issuesN != 0, nil
@@ -105,7 +112,7 @@ func (p Text) printIssue(i *result.Issue) {
 	if i.Pos.Column != 0 {
 		pos += fmt.Sprintf(":%d", i.Pos.Column)
 	}
-	fmt.Fprintf(StdOut, "%s: %s\n", pos, text)
+	fmt.Fprintf(logutils.StdOut, "%s: %s\n", pos, text)
 }
 
 func (p Text) printIssuedLines(i *result.Issue, lines linesCache) {
@@ -118,12 +125,12 @@ func (p Text) printIssuedLines(i *result.Issue, lines linesCache) {
 
 		zeroIndexedLine := line - 1
 		if zeroIndexedLine >= len(lines) {
-			logrus.Warnf("No line %d in file %s", line, i.FilePath())
+			p.log.Warnf("No line %d in file %s", line, i.FilePath())
 			break
 		}
 
 		lineStr = string(bytes.Trim(lines[zeroIndexedLine], "\r"))
-		fmt.Fprintln(StdOut, lineStr)
+		fmt.Fprintln(logutils.StdOut, lineStr)
 	}
 }
 
@@ -146,5 +153,5 @@ func (p Text) printUnderLinePointer(i *result.Issue, line string) {
 		prefix += strings.Repeat(" ", spacesCount)
 	}
 
-	fmt.Fprintf(StdOut, "%s%s\n", prefix, p.SprintfColored(color.FgYellow, "^"))
+	fmt.Fprintf(logutils.StdOut, "%s%s\n", prefix, p.SprintfColored(color.FgYellow, "^"))
 }

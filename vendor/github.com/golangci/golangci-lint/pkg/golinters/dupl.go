@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/token"
 
+	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
 	duplAPI "github.com/mibk/dupl"
 )
@@ -19,13 +20,17 @@ func (Dupl) Desc() string {
 	return "Tool for code clone detection"
 }
 
-func (d Dupl) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error) {
-	issues, err := duplAPI.Run(lintCtx.Paths.Files, lintCtx.Settings().Dupl.Threshold)
+func (d Dupl) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+	issues, err := duplAPI.Run(lintCtx.PkgProgram.Files(lintCtx.Cfg.Run.AnalyzeTests), lintCtx.Settings().Dupl.Threshold)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []result.Issue
+	if len(issues) == 0 {
+		return nil, nil
+	}
+
+	res := make([]result.Issue, 0, len(issues))
 	for _, i := range issues {
 		dupl := fmt.Sprintf("%s:%d-%d", i.To.Filename(), i.To.LineStart(), i.To.LineEnd())
 		text := fmt.Sprintf("%d-%d lines are duplicate of %s",
@@ -36,7 +41,7 @@ func (d Dupl) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error)
 				Filename: i.From.Filename(),
 				Line:     i.From.LineStart(),
 			},
-			LineRange: result.Range{
+			LineRange: &result.Range{
 				From: i.From.LineStart(),
 				To:   i.From.LineEnd(),
 			},

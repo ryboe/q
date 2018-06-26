@@ -3,8 +3,10 @@ package golinters
 import (
 	"context"
 	"fmt"
+	"sort"
 
-	gocycloAPI "github.com/golangci/gocyclo"
+	gocycloAPI "github.com/golangci/gocyclo/pkg/gocyclo"
+	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
@@ -18,13 +20,23 @@ func (Gocyclo) Desc() string {
 	return "Computes and checks the cyclomatic complexity of functions"
 }
 
-func (g Gocyclo) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error) {
-	stats := gocycloAPI.Run(lintCtx.Paths.MixedPaths())
+func (g Gocyclo) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+	var stats []gocycloAPI.Stat
+	for _, f := range lintCtx.ASTCache.GetAllValidFiles() {
+		stats = gocycloAPI.BuildStats(f.F, f.Fset, stats)
+	}
+	if len(stats) == 0 {
+		return nil, nil
+	}
 
-	var res []result.Issue
+	sort.Slice(stats, func(i, j int) bool {
+		return stats[i].Complexity > stats[j].Complexity
+	})
+
+	res := make([]result.Issue, 0, len(stats))
 	for _, s := range stats {
 		if s.Complexity <= lintCtx.Settings().Gocyclo.MinComplexity {
-			continue
+			break //Break as the stats is already sorted from greatest to least
 		}
 
 		res = append(res, result.Issue{

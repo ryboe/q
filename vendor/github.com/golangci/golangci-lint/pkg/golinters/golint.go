@@ -3,11 +3,12 @@ package golinters
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"go/ast"
+	"go/token"
 
-	"github.com/golang/lint"
+	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/sirupsen/logrus"
+	lintAPI "github.com/golangci/lint-1"
 )
 
 type Golint struct{}
@@ -20,11 +21,16 @@ func (Golint) Desc() string {
 	return "Golint differs from gofmt. Gofmt reformats Go source code, whereas golint prints out style mistakes"
 }
 
-func (g Golint) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error) {
+func (g Golint) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	var issues []result.Issue
 	var lintErr error
-	for _, pkgFiles := range lintCtx.Paths.FilesGrouppedByDirs() {
-		i, err := g.lintFiles(lintCtx.Settings().Golint.MinConfidence, pkgFiles...)
+	for _, pkg := range lintCtx.PkgProgram.Packages() {
+		files, fset, err := getASTFilesForPkg(lintCtx, &pkg)
+		if err != nil {
+			return nil, err
+		}
+
+		i, err := g.lintPkg(lintCtx.Settings().Golint.MinConfidence, files, fset)
 		if err != nil {
 			lintErr = err
 			continue
@@ -32,29 +38,24 @@ func (g Golint) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, erro
 		issues = append(issues, i...)
 	}
 	if lintErr != nil {
-		logrus.Infof("golint: %s", lintErr)
+		lintCtx.Log.Warnf("Golint: %s", lintErr)
 	}
 
 	return issues, nil
 }
 
-func (g Golint) lintFiles(minConfidence float64, filenames ...string) ([]result.Issue, error) {
-	files := make(map[string][]byte)
-	for _, filename := range filenames {
-		src, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("can't read file %s: %s", filename, err)
-		}
-		files[filename] = src
-	}
-
-	l := new(lint.Linter)
-	ps, err := l.LintFiles(files)
+func (g Golint) lintPkg(minConfidence float64, files []*ast.File, fset *token.FileSet) ([]result.Issue, error) {
+	l := new(lintAPI.Linter)
+	ps, err := l.LintASTFiles(files, fset)
 	if err != nil {
-		return nil, fmt.Errorf("can't lint files %s: %s", filenames, err)
+		return nil, fmt.Errorf("can't lint %d files: %s", len(files), err)
 	}
 
-	var issues []result.Issue
+	if len(ps) == 0 {
+		return nil, nil
+	}
+
+	issues := make([]result.Issue, 0, len(ps)) // This is worst case
 	for _, p := range ps {
 		if p.Confidence >= minConfidence {
 			issues = append(issues, result.Issue{

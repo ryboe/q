@@ -8,8 +8,9 @@ import (
 
 	gofmtAPI "github.com/golangci/gofmt/gofmt"
 	goimportsAPI "github.com/golangci/gofmt/goimports"
+	"github.com/golangci/golangci-lint/pkg/lint/linter"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/sirupsen/logrus"
 	"sourcegraph.com/sourcegraph/go-diff/diff"
 )
 
@@ -54,7 +55,7 @@ func getFirstDeletedAndAddedLineNumberInHunk(h *diff.Hunk) (int, int, error) {
 	return 0, firstAddedLineNumber, fmt.Errorf("didn't find deletion line in hunk %s", string(h.Body))
 }
 
-func (g Gofmt) extractIssuesFromPatch(patch string) ([]result.Issue, error) {
+func (g Gofmt) extractIssuesFromPatch(patch string, log logutils.Log) ([]result.Issue, error) {
 	diffs, err := diff.ParseMultiFileDiff([]byte(patch))
 	if err != nil {
 		return nil, fmt.Errorf("can't parse patch: %s", err)
@@ -67,14 +68,13 @@ func (g Gofmt) extractIssuesFromPatch(patch string) ([]result.Issue, error) {
 	issues := []result.Issue{}
 	for _, d := range diffs {
 		if len(d.Hunks) == 0 {
-			logrus.Warnf("Got no hunks in diff %+v", d)
+			log.Warnf("Got no hunks in diff %+v", d)
 			continue
 		}
 
 		for _, hunk := range d.Hunks {
 			deletedLine, addedLine, err := getFirstDeletedAndAddedLineNumberInHunk(hunk)
 			if err != nil {
-				logrus.Infof("Can't get first deleted line number for hunk: %s", err)
 				if addedLine > 1 {
 					deletedLine = addedLine - 1 // use previous line, TODO: use both prev and next lines
 				} else {
@@ -101,10 +101,10 @@ func (g Gofmt) extractIssuesFromPatch(patch string) ([]result.Issue, error) {
 	return issues, nil
 }
 
-func (g Gofmt) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error) {
+func (g Gofmt) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	var issues []result.Issue
 
-	for _, f := range lintCtx.Paths.Files {
+	for _, f := range lintCtx.PkgProgram.Files(lintCtx.Cfg.Run.AnalyzeTests) {
 		var diff []byte
 		var err error
 		if g.UseGoimports {
@@ -119,7 +119,7 @@ func (g Gofmt) Run(ctx context.Context, lintCtx *Context) ([]result.Issue, error
 			continue
 		}
 
-		is, err := g.extractIssuesFromPatch(string(diff))
+		is, err := g.extractIssuesFromPatch(string(diff), lintCtx.Log)
 		if err != nil {
 			return nil, fmt.Errorf("can't extract issues from gofmt diff output %q: %s", string(diff), err)
 		}

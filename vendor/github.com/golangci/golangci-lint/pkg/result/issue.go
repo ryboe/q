@@ -11,8 +11,8 @@ type Issue struct {
 	Text       string
 
 	Pos       token.Position
-	LineRange Range
-	HunkPos   int
+	LineRange *Range `json:",omitempty"`
+	HunkPos   int    `json:",omitempty"`
 }
 
 func (i Issue) FilePath() string {
@@ -23,7 +23,18 @@ func (i Issue) Line() int {
 	return i.Pos.Line
 }
 
+func (i Issue) Column() int {
+	return i.Pos.Column
+}
+
 func (i Issue) GetLineRange() Range {
+	if i.LineRange == nil {
+		return Range{
+			From: i.Line(),
+			To:   i.Line(),
+		}
+	}
+
 	if i.LineRange.From == 0 {
 		return Range{
 			From: i.Line(),
@@ -31,5 +42,5 @@ func (i Issue) GetLineRange() Range {
 		}
 	}
 
-	return i.LineRange
+	return *i.LineRange
 }
