@@ -152,7 +152,7 @@ func prependArgName(names, values []string) []string {
 	prepended := make([]string, len(values))
 	for i, value := range values {
 		name := ""
-		if i<len(names) {
+		if i < len(names) {
 			name = names[i]
 		}
 		if name == "" {
