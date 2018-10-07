@@ -150,13 +150,17 @@ func getCallerInfo() (funcName, file string, line int, err error) {
 // color codes. If no name is given, just the value will be returned.
 func prependArgName(names, values []string) []string {
 	prepended := make([]string, len(values))
-	for i, name := range names {
+	for i, value := range values {
+		name := ""
+		if i<len(names) {
+			name = names[i]
+		}
 		if name == "" {
-			prepended[i] = values[i]
+			prepended[i] = value
 			continue
 		}
 		name = colorize(name, bold)
-		prepended[i] = fmt.Sprintf("%s=%s", name, values[i])
+		prepended[i] = fmt.Sprintf("%s=%s", name, value)
 	}
 	return prepended
 }
