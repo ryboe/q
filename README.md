@@ -54,6 +54,8 @@ rmqq() {
 }
 ```
 
+you also can simply ```tail -f $TMPDIR/q```, but it's highly recommended to use the above commands.
+
 ## Editor Integration
 
 #### VS Code
