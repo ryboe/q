@@ -27,6 +27,10 @@ func init() {
 // checkUnkeyedLiteral checks if a composite literal is a struct literal with
 // unkeyed fields.
 func checkUnkeyedLiteral(f *File, node ast.Node) {
+	if strings.HasSuffix(f.name, "_test.go") {
+		return
+	}
+
 	cl := node.(*ast.CompositeLit)
 
 	typ := f.pkg.types[cl].Type
@@ -69,7 +73,10 @@ func checkUnkeyedLiteral(f *File, node ast.Node) {
 		return
 	}
 
-	f.Badf(cl.Pos(), "%s composite literal uses unkeyed fields", typeName)
+	f.Badf(cl.Pos(), "%s composite literal uses unkeyed fields",
+		types.TypeString(typ, func(pkg *types.Package) string {
+			return pkg.Name()
+		}))
 }
 
 func isLocalType(f *File, typ types.Type) bool {
@@ -81,7 +88,7 @@ func isLocalType(f *File, typ types.Type) bool {
 		return isLocalType(f, x.Elem())
 	case *types.Named:
 		// names in package foo are local to foo_test too
-		return strings.TrimSuffix(x.Obj().Pkg().Path(), "_test") == strings.TrimSuffix(f.pkg.path, "_test")
+		return strings.TrimSuffix(x.Obj().Pkg().Path(), "_test") == strings.TrimSuffix(f.pkg.typesPkg.Path(), "_test")
 	}
 	return false
 }
