@@ -1,13 +1,13 @@
 package astcache
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+	"github.com/golangci/golangci-lint/pkg/goutils"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"golang.org/x/tools/go/loader"
 )
@@ -65,11 +65,6 @@ func (c *Cache) prepareValidFiles() {
 func LoadFromProgram(prog *loader.Program, log logutils.Log) (*Cache, error) {
 	c := NewCache(log)
 
-	root, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("can't get working dir: %s", err)
-	}
-
 	for _, pkg := range prog.InitialPackages() {
 		for _, f := range pkg.Files {
 			pos := prog.Fset.Position(f.Pos())
@@ -77,17 +72,21 @@ func LoadFromProgram(prog *loader.Program, log logutils.Log) (*Cache, error) {
 				continue
 			}
 
-			relPath, err := filepath.Rel(root, pos.Filename)
-			if err != nil {
-				c.log.Warnf("Can't get relative path for %s and %s: %s",
-					root, pos.Filename, err)
+			if goutils.IsCgoFilename(pos.Filename) {
 				continue
 			}
 
-			c.m[relPath] = &File{
+			path, err := fsutils.ShortestRelPath(pos.Filename, "")
+			if err != nil {
+				c.log.Warnf("Can't get relative path for %s: %s",
+					pos.Filename, err)
+				continue
+			}
+
+			c.m[path] = &File{
 				F:    f,
 				Fset: prog.Fset,
-				Name: relPath,
+				Name: path,
 			}
 		}
 	}
@@ -113,7 +112,7 @@ func (c *Cache) parseFile(filePath string, fset *token.FileSet) {
 	}
 }
 
-func LoadFromFiles(files []string, log logutils.Log) (*Cache, error) {
+func LoadFromFiles(files []string, log logutils.Log) (*Cache, error) { //nolint:unparam
 	c := NewCache(log)
 
 	fset := token.NewFileSet()

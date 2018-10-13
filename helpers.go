@@ -5,7 +5,6 @@
 package q
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -113,9 +112,11 @@ func colorize(text string, c color) string {
 
 // exprToString returns the source text underlying the given ast.Expr.
 func exprToString(arg ast.Expr) string {
-	var buf bytes.Buffer
+	var buf strings.Builder
 	fset := token.NewFileSet()
-	printer.Fprint(&buf, fset, arg)
+	if err := printer.Fprint(&buf, fset, arg); err != nil {
+		return ""
+	}
 
 	// CallExpr will be multi-line and indented with tabs. replace tabs with
 	// spaces so we can better control formatting during output().

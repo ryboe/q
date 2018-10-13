@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/golangci/go-tools/ssa"
+	"github.com/golangci/tools/go/ssa"
 )
 
 type SliceInterval struct {

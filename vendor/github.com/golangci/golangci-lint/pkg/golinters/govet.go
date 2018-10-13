@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golangci/golangci-lint/pkg/fsutils"
 	"github.com/golangci/golangci-lint/pkg/goutils"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
@@ -25,7 +26,8 @@ func (Govet) Name() string {
 }
 
 func (Govet) Desc() string {
-	return "Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string"
+	return "Vet examines Go source code and reports suspicious constructs, " +
+		"such as Printf calls whose arguments do not align with the format string"
 }
 
 func (g Govet) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
@@ -51,7 +53,7 @@ func (g Govet) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue
 	for _, i := range govetIssues {
 		res = append(res, result.Issue{
 			Pos:        i.Pos,
-			Text:       i.Message,
+			Text:       markIdentifiers(i.Message),
 			FromLinter: g.Name(),
 		})
 	}
@@ -80,7 +82,7 @@ func (g Govet) runOnInstalledPackages(ctx context.Context, lintCtx *linter.Conte
 			continue
 		}
 		issues, err := govetAPI.Analyze(astFiles, fset, nil,
-			lintCtx.Settings().Govet.CheckShadowing)
+			lintCtx.Settings().Govet.CheckShadowing, getPath)
 		if err != nil {
 			return nil, err
 		}
@@ -215,15 +217,28 @@ func runGoCommand(ctx context.Context, log logutils.Log, args ...string) error {
 	return nil
 }
 
-func (g Govet) runOnSourcePackages(ctx context.Context, lintCtx *linter.Context) ([]govetAPI.Issue, error) {
+func filterFiles(files []*ast.File, fset *token.FileSet) []*ast.File {
+	newFiles := make([]*ast.File, 0, len(files))
+	for _, f := range files {
+		if !goutils.IsCgoFilename(fset.Position(f.Pos()).Filename) {
+			newFiles = append(newFiles, f)
+		}
+	}
+
+	return newFiles
+}
+
+func (g Govet) runOnSourcePackages(_ context.Context, lintCtx *linter.Context) ([]govetAPI.Issue, error) {
 	// TODO: check .S asm files: govet can do it if pass dirs
 	var govetIssues []govetAPI.Issue
 	for _, pkg := range lintCtx.Program.InitialPackages() {
 		if len(pkg.Files) == 0 {
 			continue
 		}
-		issues, err := govetAPI.Analyze(pkg.Files, lintCtx.Program.Fset, pkg,
-			lintCtx.Settings().Govet.CheckShadowing)
+
+		filteredFiles := filterFiles(pkg.Files, lintCtx.Program.Fset)
+		issues, err := govetAPI.Analyze(filteredFiles, lintCtx.Program.Fset, pkg,
+			lintCtx.Settings().Govet.CheckShadowing, getPath)
 		if err != nil {
 			return nil, err
 		}
@@ -231,4 +246,8 @@ func (g Govet) runOnSourcePackages(ctx context.Context, lintCtx *linter.Context)
 	}
 
 	return govetIssues, nil
+}
+
+func getPath(f *ast.File, fset *token.FileSet) (string, error) {
+	return fsutils.ShortestRelPath(fset.Position(f.Pos()).Filename, "")
 }

@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-type OutFormat string
-
 const (
 	OutFormatJSON              = "json"
 	OutFormatLineNumber        = "line-number"
@@ -30,44 +28,21 @@ type ExcludePattern struct {
 
 var DefaultExcludePatterns = []ExcludePattern{
 	{
-		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
-		Linter:  "errcheck",
-		Why:     "Almost all programs ignore errors on these functions and in most cases it's ok",
+		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close" +
+			"|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
+		Linter: "errcheck",
+		Why:    "Almost all programs ignore errors on these functions and in most cases it's ok",
 	},
 	{
-		Pattern: "(comment on exported (method|function|type|const)|should have( a package)? comment|comment should be of the form)",
-		Linter:  "golint",
-		Why:     "Annoying issue about not having a comment. The rare codebase has such comments",
+		Pattern: "(comment on exported (method|function|type|const)|" +
+			"should have( a package)? comment|comment should be of the form)",
+		Linter: "golint",
+		Why:    "Annoying issue about not having a comment. The rare codebase has such comments",
 	},
 	{
 		Pattern: "func name will be used as test\\.Test.* by other packages, and that stutters; consider calling this",
 		Linter:  "golint",
 		Why:     "False positive when tests are defined in package 'test'",
-	},
-	{
-		Pattern: "Use of unsafe calls should be audited",
-		Linter:  "gas",
-		Why:     "Too many false-positives on 'unsafe' usage",
-	},
-	{
-		Pattern: "Subprocess launch(ed with variable|ing should be audited)",
-		Linter:  "gas",
-		Why:     "Too many false-positives for parametrized shell calls",
-	},
-	{
-		Pattern: "G104",
-		Linter:  "gas",
-		Why:     "Duplicated errcheck checks",
-	},
-	{
-		Pattern: "(Expect directory permissions to be 0750 or less|Expect file permissions to be 0600 or less)",
-		Linter:  "gas",
-		Why:     "Too many issues in popular repos",
-	},
-	{
-		Pattern: "Potential file inclusion via variable",
-		Linter:  "gas",
-		Why:     "False positive is triggered by 'src, err := ioutil.ReadFile(filename)'",
 	},
 	{
 		Pattern: "(possible misuse of unsafe.Pointer|should have signature)",
@@ -153,6 +128,55 @@ type LintersSettings struct {
 		Packages      []string
 		IncludeGoRoot bool `mapstructure:"include-go-root"`
 	}
+	Misspell struct {
+		Locale string
+	}
+	Unused struct {
+		CheckExported bool `mapstructure:"check-exported"`
+	}
+
+	Lll      LllSettings
+	Unparam  UnparamSettings
+	Nakedret NakedretSettings
+	Prealloc PreallocSettings
+}
+
+type LllSettings struct {
+	LineLength int `mapstructure:"line-length"`
+	TabWidth   int `mapstructure:"tab-width"`
+}
+
+type UnparamSettings struct {
+	CheckExported bool `mapstructure:"check-exported"`
+	Algo          string
+}
+
+type NakedretSettings struct {
+	MaxFuncLines int `mapstructure:"max-func-lines"`
+}
+
+type PreallocSettings struct {
+	Simple     bool
+	RangeLoops bool `mapstructure:"range-loops"`
+	ForLoops   bool `mapstructure:"for-loops"`
+}
+
+var defaultLintersSettings = LintersSettings{
+	Lll: LllSettings{
+		LineLength: 120,
+		TabWidth:   1,
+	},
+	Unparam: UnparamSettings{
+		Algo: "cha",
+	},
+	Nakedret: NakedretSettings{
+		MaxFuncLines: 30,
+	},
+	Prealloc: PreallocSettings{
+		Simple:     true,
+		RangeLoops: true,
+		ForLoops:   false,
+	},
 }
 
 type Linters struct {
@@ -192,4 +216,10 @@ type Config struct { //nolint:maligned
 	Issues          Issues
 
 	InternalTest bool // Option is used only for testing golangci-lint code, don't use it
+}
+
+func NewDefault() *Config {
+	return &Config{
+		LintersSettings: defaultLintersSettings,
+	}
 }

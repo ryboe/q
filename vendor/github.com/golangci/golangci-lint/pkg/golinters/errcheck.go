@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	errcheckAPI "github.com/golangci/errcheck/golangci"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	errcheckAPI "github.com/kisielk/errcheck/golangci"
 )
 
 type Errcheck struct{}
@@ -16,7 +16,8 @@ func (Errcheck) Name() string {
 }
 
 func (Errcheck) Desc() string {
-	return "Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases"
+	return "Errcheck is a program for checking for unchecked errors " +
+		"in go programs. These unchecked errors can be critical bugs in some cases"
 }
 
 func (e Errcheck) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {

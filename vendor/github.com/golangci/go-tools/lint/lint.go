@@ -18,16 +18,15 @@ import (
 	"go/types"
 	"path/filepath"
 	"runtime"
-	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
 	"unicode"
 
-	"github.com/golangci/go-tools/ssa"
-	"github.com/golangci/go-tools/ssa/ssautil"
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/loader"
+	"github.com/golangci/tools/go/ssa"
+	"github.com/golangci/tools/go/ssa/ssautil"
 )
 
 type Job struct {
@@ -236,7 +235,7 @@ func parseDirective(s string) (cmd string, args []string) {
 	return fields[0], fields[1:]
 }
 
-func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config, ssaprog *ssa.Program) []Problem {
+func (l *Linter) Lint(lprog *loader.Program, ssaprog *ssa.Program, conf *loader.Config) []Problem {
 	pkgMap := map[*ssa.Package]*Pkg{}
 	var pkgs []*Pkg
 	for _, pkginfo := range lprog.InitialPackages() {
@@ -418,33 +417,18 @@ func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config, ssaprog *ssa.P
 		jobs = append(jobs, j)
 	}
 	wg := &sync.WaitGroup{}
-	crashesMap := sync.Map{}
-	for i, j := range jobs {
+	for _, j := range jobs {
 		wg.Add(1)
-		go func(i int, j *Job) {
-			defer func() {
-				if err := recover(); err != nil {
-					perr := fmt.Errorf("panic: %s, stack: %s", err, debug.Stack())
-					crashesMap.Store(i, perr)
-				}
-			}()
+		go func(j *Job) {
 			defer wg.Done()
 			fn := funcs[j.check]
 			if fn == nil {
 				return
 			}
 			fn(j)
-		}(i, j)
+		}(j)
 	}
 	wg.Wait()
-
-	for i := range jobs {
-		err, ok := crashesMap.Load(i)
-		if !ok {
-			continue
-		}
-		panic(err) // restore panic but to main goroutine to be properly catched
-	}
 
 	for _, j := range jobs {
 		for _, p := range j.problems {
@@ -496,14 +480,6 @@ type Pkg struct {
 	*ssa.Package
 	Info     *loader.PackageInfo
 	BuildPkg *build.Package
-}
-
-func (p Pkg) GetPackage() *types.Package {
-	if p.Package == nil {
-		return nil
-	}
-
-	return p.Pkg
 }
 
 type packager interface {
@@ -580,7 +556,7 @@ func (prog *Program) DisplayPosition(p token.Pos) token.Position {
 func (j *Job) Errorf(n Positioner, format string, args ...interface{}) *Problem {
 	tf := j.Program.SSA.Fset.File(n.Pos())
 	f := j.Program.tokenFileMap[tf]
-	pkg := j.Program.astFileMap[f].GetPackage()
+	pkg := j.Program.astFileMap[f].Pkg
 
 	pos := j.Program.DisplayPosition(n.Pos())
 	problem := Problem{
@@ -803,9 +779,6 @@ func NodeFns(pkgs []*Pkg) map[ast.Node]*ssa.Function {
 	wg := &sync.WaitGroup{}
 	chNodeFns := make(chan map[ast.Node]*ssa.Function, runtime.NumCPU()*2)
 	for _, pkg := range pkgs {
-		if pkg.Package == nil { // package wasn't loaded, probably it doesn't compile
-			continue
-		}
 		pkg := pkg
 		wg.Add(1)
 		go func() {

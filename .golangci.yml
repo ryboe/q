@@ -10,5 +10,3 @@ linters-settings:
     min-complexity: 11
   gofmt:
     simplify: true
-  golint:
-    min-confidence: 0.25  # ignore missing package comment false positive

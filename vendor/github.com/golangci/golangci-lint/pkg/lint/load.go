@@ -1,33 +1,35 @@
 package lint
 
 import (
-	"context"
 	"fmt"
 	"go/build"
 	"go/parser"
+	"go/types"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/golangci/golangci-lint/pkg/exitcodes"
+	"github.com/golangci/golangci-lint/pkg/fsutils"
 	"github.com/golangci/golangci-lint/pkg/goutils"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 
-	"github.com/golangci/go-tools/ssa"
-	"github.com/golangci/go-tools/ssa/ssautil"
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/lint/astcache"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/packages"
+	"github.com/golangci/tools/go/ssa"
+	"github.com/golangci/tools/go/ssa/ssautil"
 	"golang.org/x/tools/go/loader"
 )
 
 var loadDebugf = logutils.Debug("load")
 
 func isFullImportNeeded(linters []linter.Config, cfg *config.Config) bool {
-	for _, linter := range linters {
-		if linter.NeedsProgramLoading() {
-			if linter.Linter.Name() == "govet" && cfg.LintersSettings.Govet.UseInstalledPackages {
+	for _, lc := range linters {
+		if lc.NeedsProgramLoading() {
+			if lc.Name() == "govet" && cfg.LintersSettings.Govet.UseInstalledPackages {
 				// TODO: remove this hack
 				continue
 			}
@@ -50,21 +52,13 @@ func isSSAReprNeeded(linters []linter.Config) bool {
 }
 
 func normalizePaths(paths []string) ([]string, error) {
-	root, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("can't get working dir: %s", err)
-	}
-
 	ret := make([]string, 0, len(paths))
 	for _, p := range paths {
-		if filepath.IsAbs(p) {
-			relPath, err := filepath.Rel(root, p)
-			if err != nil {
-				return nil, fmt.Errorf("can't get relative path for path %s and root %s: %s",
-					p, root, err)
-			}
-			p = relPath
+		relPath, err := fsutils.ShortestRelPath(p, "")
+		if err != nil {
+			return nil, fmt.Errorf("can't get relative path for path %s: %s", p, err)
 		}
+		p = relPath
 
 		ret = append(ret, "./"+p)
 	}
@@ -78,7 +72,7 @@ func getCurrentProjectImportPath() (string, error) {
 		return "", fmt.Errorf("no GOPATH env variable")
 	}
 
-	wd, err := os.Getwd()
+	wd, err := fsutils.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("can't get workind directory: %s", err)
 	}
@@ -109,7 +103,9 @@ func isLocalProjectAnalysis(args []string) bool {
 	return true
 }
 
-func getTypeCheckFuncBodies(cfg *config.Run, linters []linter.Config, pkgProg *packages.Program, log logutils.Log) func(string) bool {
+func getTypeCheckFuncBodies(cfg *config.Run, linters []linter.Config,
+	pkgProg *packages.Program, log logutils.Log) func(string) bool {
+
 	if !isLocalProjectAnalysis(cfg.Args) {
 		loadDebugf("analysis in nonlocal, don't optimize loading by not typechecking func bodies")
 		return nil
@@ -155,7 +151,9 @@ func getTypeCheckFuncBodies(cfg *config.Run, linters []linter.Config, pkgProg *p
 	}
 }
 
-func loadWholeAppIfNeeded(ctx context.Context, linters []linter.Config, cfg *config.Config, pkgProg *packages.Program, log logutils.Log) (*loader.Program, *loader.Config, error) {
+func loadWholeAppIfNeeded(linters []linter.Config, cfg *config.Config,
+	pkgProg *packages.Program, log logutils.Log) (*loader.Program, *loader.Config, error) {
+
 	if !isFullImportNeeded(linters, cfg) {
 		return nil, nil, nil
 	}
@@ -171,6 +169,9 @@ func loadWholeAppIfNeeded(ctx context.Context, linters []linter.Config, cfg *con
 		AllowErrors:         true,                 // Try to analyze partially
 		ParserMode:          parser.ParseComments, // AST will be reused by linters
 		TypeCheckFuncBodies: getTypeCheckFuncBodies(&cfg.Run, linters, pkgProg, log),
+		TypeChecker: types.Config{
+			Sizes: types.SizesFor(build.Default.Compiler, build.Default.GOARCH),
+		},
 	}
 
 	var loaderArgs []string
@@ -211,7 +212,7 @@ func loadWholeAppIfNeeded(ctx context.Context, linters []linter.Config, cfg *con
 	return prog, loadcfg, nil
 }
 
-func buildSSAProgram(ctx context.Context, lprog *loader.Program, log logutils.Log) *ssa.Program {
+func buildSSAProgram(lprog *loader.Program, log logutils.Log) *ssa.Program {
 	startedAt := time.Now()
 	defer func() {
 		log.Infof("SSA repr building took %s", time.Since(startedAt))
@@ -225,14 +226,18 @@ func buildSSAProgram(ctx context.Context, lprog *loader.Program, log logutils.Lo
 // separateNotCompilingPackages moves not compiling packages into separate slices:
 // a lot of linters crash on such packages. Leave them only for those linters
 // which can work with them.
+//nolint:gocyclo
 func separateNotCompilingPackages(lintCtx *linter.Context) {
 	prog := lintCtx.Program
+
+	notCompilingPackagesSet := map[*loader.PackageInfo]bool{}
 
 	if prog.Created != nil {
 		compilingCreated := make([]*loader.PackageInfo, 0, len(prog.Created))
 		for _, info := range prog.Created {
 			if len(info.Errors) != 0 {
 				lintCtx.NotCompilingPackages = append(lintCtx.NotCompilingPackages, info)
+				notCompilingPackagesSet[info] = true
 			} else {
 				compilingCreated = append(compilingCreated, info)
 			}
@@ -242,10 +247,27 @@ func separateNotCompilingPackages(lintCtx *linter.Context) {
 
 	if prog.Imported != nil {
 		for k, info := range prog.Imported {
-			if len(info.Errors) != 0 {
-				lintCtx.NotCompilingPackages = append(lintCtx.NotCompilingPackages, info)
-				delete(prog.Imported, k)
+			if len(info.Errors) == 0 {
+				continue
 			}
+
+			lintCtx.NotCompilingPackages = append(lintCtx.NotCompilingPackages, info)
+			notCompilingPackagesSet[info] = true
+			delete(prog.Imported, k)
+		}
+	}
+
+	if prog.AllPackages != nil {
+		for k, info := range prog.AllPackages {
+			if len(info.Errors) == 0 {
+				continue
+			}
+
+			if !notCompilingPackagesSet[info] {
+				lintCtx.NotCompilingPackages = append(lintCtx.NotCompilingPackages, info)
+				notCompilingPackagesSet[info] = true
+			}
+			delete(prog.AllPackages, k)
 		}
 	}
 
@@ -255,7 +277,7 @@ func separateNotCompilingPackages(lintCtx *linter.Context) {
 }
 
 //nolint:gocyclo
-func LoadContext(ctx context.Context, linters []linter.Config, cfg *config.Config, log logutils.Log) (*linter.Context, error) {
+func LoadContext(linters []linter.Config, cfg *config.Config, log logutils.Log) (*linter.Context, error) {
 	// Set GOROOT to have working cross-compilation: cross-compiled binaries
 	// have invalid GOROOT. XXX: can't use runtime.GOROOT().
 	goroot, err := goutils.DiscoverGoRoot()
@@ -282,14 +304,18 @@ func LoadContext(ctx context.Context, linters []linter.Config, cfg *config.Confi
 		return nil, err
 	}
 
-	prog, loaderConfig, err := loadWholeAppIfNeeded(ctx, linters, cfg, pkgProg, log)
+	if len(pkgProg.Packages()) == 0 {
+		return nil, exitcodes.ErrNoGoFiles
+	}
+
+	prog, loaderConfig, err := loadWholeAppIfNeeded(linters, cfg, pkgProg, log)
 	if err != nil {
 		return nil, err
 	}
 
 	var ssaProg *ssa.Program
 	if prog != nil && isSSAReprNeeded(linters) {
-		ssaProg = buildSSAProgram(ctx, prog, log)
+		ssaProg = buildSSAProgram(prog, log)
 	}
 
 	astLog := log.Child("astcache")
