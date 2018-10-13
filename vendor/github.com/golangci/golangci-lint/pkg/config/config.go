@@ -4,42 +4,70 @@ import (
 	"time"
 )
 
-type OutFormat string
-
 const (
 	OutFormatJSON              = "json"
 	OutFormatLineNumber        = "line-number"
 	OutFormatColoredLineNumber = "colored-line-number"
+	OutFormatTab               = "tab"
+	OutFormatCheckstyle        = "checkstyle"
 )
 
-var OutFormats = []string{OutFormatColoredLineNumber, OutFormatLineNumber, OutFormatJSON}
+var OutFormats = []string{
+	OutFormatColoredLineNumber,
+	OutFormatLineNumber,
+	OutFormatJSON,
+	OutFormatTab,
+	OutFormatCheckstyle,
+}
 
-var DefaultExcludePatterns = []string{
-	// errcheck
-	"Error return value of .((os\\.)?std(out|err)\\..*|.*Close|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
+type ExcludePattern struct {
+	Pattern string
+	Linter  string
+	Why     string
+}
 
-	// golint
-	"should have comment",
-	"comment on exported method",
+var DefaultExcludePatterns = []ExcludePattern{
+	{
+		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close" +
+			"|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
+		Linter: "errcheck",
+		Why:    "Almost all programs ignore errors on these functions and in most cases it's ok",
+	},
+	{
+		Pattern: "(comment on exported (method|function|type|const)|" +
+			"should have( a package)? comment|comment should be of the form)",
+		Linter: "golint",
+		Why:    "Annoying issue about not having a comment. The rare codebase has such comments",
+	},
+	{
+		Pattern: "func name will be used as test\\.Test.* by other packages, and that stutters; consider calling this",
+		Linter:  "golint",
+		Why:     "False positive when tests are defined in package 'test'",
+	},
+	{
+		Pattern: "(possible misuse of unsafe.Pointer|should have signature)",
+		Linter:  "govet",
+		Why:     "Common false positives",
+	},
+	{
+		Pattern: "ineffective break statement. Did you mean to break out of the outer loop",
+		Linter:  "megacheck",
+		Why:     "Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore",
+	},
+}
 
-	// gas
-	"G103:", // Use of unsafe calls should be audited
-	"G104:", // disable what errcheck does: it reports on Close etc
-	"G204:", // Subprocess launching should be audited: too lot false positives
-	"G301:", // Expect directory permissions to be 0750 or less
-	"G302:", // Expect file permissions to be 0600 or less
-	"G304:", // Potential file inclusion via variable: `src, err := ioutil.ReadFile(filename)`
+func GetDefaultExcludePatternsStrings() []string {
+	var ret []string
+	for _, p := range DefaultExcludePatterns {
+		ret = append(ret, p.Pattern)
+	}
 
-	// govet
-	"possible misuse of unsafe.Pointer",
-	"should have signature",
-
-	// megacheck
-	"ineffective break statement. Did you mean to break out of the outer loop", // developers tend to write in C-style with break in switch
+	return ret
 }
 
 type Run struct {
 	IsVerbose           bool `mapstructure:"verbose"`
+	Silent              bool
 	CPUProfilePath      string
 	MemProfilePath      string
 	Concurrency         int
@@ -55,6 +83,10 @@ type Run struct {
 	ExitCodeIfIssuesFound int  `mapstructure:"issues-exit-code"`
 	AnalyzeTests          bool `mapstructure:"tests"`
 	Deadline              time.Duration
+	PrintVersion          bool
+
+	SkipFiles []string `mapstructure:"skip-files"`
+	SkipDirs  []string `mapstructure:"skip-dirs"`
 }
 
 type LintersSettings struct {
@@ -63,7 +95,8 @@ type LintersSettings struct {
 		CheckAssignToBlank  bool `mapstructure:"check-blank"`
 	}
 	Govet struct {
-		CheckShadowing bool `mapstructure:"check-shadowing"`
+		CheckShadowing       bool `mapstructure:"check-shadowing"`
+		UseInstalledPackages bool `mapstructure:"use-installed-packages"`
 	}
 	Golint struct {
 		MinConfidence float64 `mapstructure:"min-confidence"`
@@ -90,6 +123,60 @@ type LintersSettings struct {
 		MinStringLen        int `mapstructure:"min-len"`
 		MinOccurrencesCount int `mapstructure:"min-occurrences"`
 	}
+	Depguard struct {
+		ListType      string `mapstructure:"list-type"`
+		Packages      []string
+		IncludeGoRoot bool `mapstructure:"include-go-root"`
+	}
+	Misspell struct {
+		Locale string
+	}
+	Unused struct {
+		CheckExported bool `mapstructure:"check-exported"`
+	}
+
+	Lll      LllSettings
+	Unparam  UnparamSettings
+	Nakedret NakedretSettings
+	Prealloc PreallocSettings
+}
+
+type LllSettings struct {
+	LineLength int `mapstructure:"line-length"`
+	TabWidth   int `mapstructure:"tab-width"`
+}
+
+type UnparamSettings struct {
+	CheckExported bool `mapstructure:"check-exported"`
+	Algo          string
+}
+
+type NakedretSettings struct {
+	MaxFuncLines int `mapstructure:"max-func-lines"`
+}
+
+type PreallocSettings struct {
+	Simple     bool
+	RangeLoops bool `mapstructure:"range-loops"`
+	ForLoops   bool `mapstructure:"for-loops"`
+}
+
+var defaultLintersSettings = LintersSettings{
+	Lll: LllSettings{
+		LineLength: 120,
+		TabWidth:   1,
+	},
+	Unparam: UnparamSettings{
+		Algo: "cha",
+	},
+	Nakedret: NakedretSettings{
+		MaxFuncLines: 30,
+	},
+	Prealloc: PreallocSettings{
+		Simple:     true,
+		RangeLoops: true,
+		ForLoops:   false,
+	},
 }
 
 type Linters struct {
@@ -114,7 +201,7 @@ type Issues struct {
 	Diff              bool   `mapstructure:"new"`
 }
 
-type Config struct { // nolint:maligned
+type Config struct { //nolint:maligned
 	Run Run
 
 	Output struct {
@@ -127,4 +214,12 @@ type Config struct { // nolint:maligned
 	LintersSettings LintersSettings `mapstructure:"linters-settings"`
 	Linters         Linters
 	Issues          Issues
+
+	InternalTest bool // Option is used only for testing golangci-lint code, don't use it
+}
+
+func NewDefault() *Config {
+	return &Config{
+		LintersSettings: defaultLintersSettings,
+	}
 }

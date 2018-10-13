@@ -14,7 +14,6 @@ import (
 	"go/ast"
 	"go/build"
 	"go/importer"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"go/types"
@@ -24,12 +23,14 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"golang.org/x/tools/go/loader"
 )
 
 // Important! If you add flags here, make sure to update cmd/go/internal/vet/vetflag.go.
 
 var (
-	verbose = flag.Bool("v", false, "verbose")
+	verbose = flag.Bool("v", true, "verbose")
 	source  = flag.Bool("source", false, "import from source instead of compiled object files")
 	tags    = flag.String("tags", "", "space-separated list of build tags to apply when parsing")
 	tagList = []string{} // exploded version of tags flag; set in main
@@ -271,7 +272,7 @@ func main() {
 		}
 		os.Exit(exitCode)
 	}
-	if doPackage(flag.Args(), nil) == nil {
+	if pkg, _ := doPackage(nil, nil, nil, nil, nil); pkg == nil {
 		warnf("no files checked")
 	}
 	os.Exit(exitCode)
@@ -344,7 +345,7 @@ func doPackageCfg(cfgFile string) {
 	stdImporter = &vcfg
 	inittypes()
 	mustTypecheck = true
-	doPackage(vcfg.GoFiles, nil)
+	doPackage(nil, nil, nil, nil, nil)
 }
 
 // doPackageDir analyzes the single package found in the directory, if there is one,
@@ -372,12 +373,12 @@ func doPackageDir(directory string) {
 	names = append(names, pkg.TestGoFiles...) // These are also in the "foo" package.
 	names = append(names, pkg.SFiles...)
 	prefixDirectory(directory, names)
-	basePkg := doPackage(names, nil)
+	basePkg, _ := doPackage(nil, nil, nil, nil, nil)
 	// Is there also a "foo_test" package? If so, do that one as well.
 	if len(pkg.XTestGoFiles) > 0 {
 		names = pkg.XTestGoFiles
 		prefixDirectory(directory, names)
-		doPackage(names, basePkg)
+		doPackage(basePkg, nil, nil, nil, nil)
 	}
 }
 
@@ -392,29 +393,25 @@ type Package struct {
 	typesPkg  *types.Package
 }
 
+type astFilePathGetter func(f *ast.File, fset *token.FileSet) (string, error)
+
 // doPackage analyzes the single package constructed from the named files.
 // It returns the parsed Package or nil if none of the files have been checked.
-func doPackage(names []string, basePkg *Package) *Package {
+func doPackage(basePkg *Package, pkgInfo *loader.PackageInfo, fs *token.FileSet, astFiles []*ast.File, pg astFilePathGetter) (*Package, error) {
 	var files []*File
-	var astFiles []*ast.File
-	fs := token.NewFileSet()
-	for _, name := range names {
+	for _, parsedFile := range astFiles {
+		name, err := pg(parsedFile, fs)
+		if err != nil {
+			return nil, err
+		}
+
 		data, err := ioutil.ReadFile(name)
 		if err != nil {
-			// Warn but continue to next package.
-			warnf("%s: %s", name, err)
-			return nil
+			return nil, fmt.Errorf("can't read %q: %s", name, err)
 		}
+
 		checkBuildTag(name, data)
-		var parsedFile *ast.File
-		if strings.HasSuffix(name, ".go") {
-			parsedFile, err = parser.ParseFile(fs, name, data, 0)
-			if err != nil {
-				warnf("%s: %s", name, err)
-				return nil
-			}
-			astFiles = append(astFiles, parsedFile)
-		}
+
 		files = append(files, &File{
 			fset:    fs,
 			content: data,
@@ -423,27 +420,19 @@ func doPackage(names []string, basePkg *Package) *Package {
 			dead:    make(map[ast.Node]bool),
 		})
 	}
-	if len(astFiles) == 0 {
-		return nil
-	}
+
 	pkg := new(Package)
 	pkg.path = astFiles[0].Name.Name
 	pkg.files = files
 	// Type check the package.
-	errs := pkg.check(fs, astFiles)
+	errs := pkg.check(fs, astFiles, pkgInfo)
 	if errs != nil {
-		if *verbose || mustTypecheck {
-			for _, err := range errs {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-			}
-			if mustTypecheck {
-				// This message could be silenced, and we could just exit,
-				// but it might be helpful at least at first to make clear that the
-				// above errors are coming from vet and not the compiler
-				// (they often look like compiler errors, such as "declared but not used").
-				errorf("typecheck failures")
-			}
+		errors := []string{}
+		for _, err := range errs {
+			errors = append(errors, err.Error())
 		}
+
+		return nil, fmt.Errorf("can't typecheck package: %s", strings.Join(errors, "|"))
 	}
 
 	// Check.
@@ -464,7 +453,7 @@ func doPackage(names []string, basePkg *Package) *Package {
 		}
 	}
 	asmCheck(pkg)
-	return pkg
+	return pkg, nil
 }
 
 func visit(path string, f os.FileInfo, err error) error {
@@ -552,7 +541,7 @@ func (f *File) loc(pos token.Pos) string {
 	// expression instead of the inner part with the actual error, the
 	// precision can mislead.
 	posn := f.fset.Position(pos)
-	return fmt.Sprintf("%s:%d", posn.Filename, posn.Line)
+	return fmt.Sprintf("%s:%d", f.name, posn.Line)
 }
 
 // locPrefix returns a formatted representation of the position for use as a line prefix.

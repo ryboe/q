@@ -89,6 +89,15 @@ q.Q($1) // DEBUG
         'body': 'q.Q($1) // DEBUG'
 ```
 
+#### Jetbrains Intellij/GoLand
+`Settings > Editor > Live Templates`
+
+In `Go`, add a new template with:
+- Abbreviation: `qq`
+- Description: `Pretty-print to $TMPDIR/q`
+- Template text: `q.Q($END$) // DEBUG`
+- Applicable in: select the `Go` scope
+
 #### vim/Emacs
 TBD Send me a PR, please :)
 
