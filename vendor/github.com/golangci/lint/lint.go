@@ -2,13 +2,13 @@
 // See LICENSE for licensing information
 
 // Package lint defines common interfaces for Go code checkers.
-package lint
+package lint // import "github.com/golangci/lint"
 
 import (
 	"go/token"
 
-	"github.com/golangci/go-tools/ssa"
 	"golang.org/x/tools/go/loader"
+	"github.com/golangci/tools/go/ssa"
 )
 
 // A Checker points out issues in a program.

@@ -4,7 +4,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/golangci/go-tools/ssa"
+	"github.com/golangci/tools/go/ssa"
 )
 
 func concreteReturnTypes(fn *ssa.Function) []*types.Tuple {

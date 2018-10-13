@@ -1,11 +1,11 @@
 package linter
 
 import (
-	"github.com/golangci/go-tools/ssa"
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/lint/astcache"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/packages"
+	"github.com/golangci/tools/go/ssa"
 	"golang.org/x/tools/go/loader"
 )
 

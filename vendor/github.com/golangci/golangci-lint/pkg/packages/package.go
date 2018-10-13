@@ -3,6 +3,8 @@ package packages
 import (
 	"go/build"
 	"path/filepath"
+
+	"github.com/golangci/golangci-lint/pkg/goutils"
 )
 
 type Package struct {
@@ -13,7 +15,13 @@ type Package struct {
 }
 
 func (pkg *Package) Files(includeTest bool) []string {
-	pkgFiles := append([]string{}, pkg.bp.GoFiles...)
+	var pkgFiles []string
+	for _, f := range pkg.bp.GoFiles {
+		if !goutils.IsCgoFilename(f) {
+			// skip cgo at all levels to prevent failures on file reading
+			pkgFiles = append(pkgFiles, f)
+		}
+	}
 
 	// TODO: add cgo files
 	if includeTest {
@@ -44,4 +52,8 @@ func (pkg *Package) TestFiles() []string {
 	pkgFiles = append(pkgFiles, pkg.bp.TestGoFiles...)
 	pkgFiles = append(pkgFiles, pkg.bp.XTestGoFiles...)
 	return pkgFiles
+}
+
+func (pkg *Package) BuildPackage() *build.Package {
+	return pkg.bp
 }

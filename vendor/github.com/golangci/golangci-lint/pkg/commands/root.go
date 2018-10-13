@@ -20,8 +20,6 @@ func (e *Executor) persistentPreRun(cmd *cobra.Command, args []string) {
 
 	runtime.GOMAXPROCS(e.cfg.Run.Concurrency)
 
-	logutils.SetupVerboseLog(e.log, e.cfg.Run.IsVerbose)
-
 	if e.cfg.Run.CPUProfilePath != "" {
 		f, err := os.Create(e.cfg.Run.CPUProfilePath)
 		if err != nil {
@@ -83,7 +81,18 @@ func (e *Executor) needVersionOption() bool {
 
 func initRootFlagSet(fs *pflag.FlagSet, cfg *config.Config, needVersionOption bool) {
 	fs.BoolVarP(&cfg.Run.IsVerbose, "verbose", "v", false, wh("verbose output"))
-	fs.BoolVarP(&cfg.Run.Silent, "silent", "s", false, wh("disables congrats outputs"))
+
+	var silent bool
+	fs.BoolVarP(&silent, "silent", "s", false, wh("disables congrats outputs"))
+	if err := fs.MarkHidden("silent"); err != nil {
+		panic(err)
+	}
+	err := fs.MarkDeprecated("silent",
+		"now golangci-lint by default is silent: it doesn't print Congrats message")
+	if err != nil {
+		panic(err)
+	}
+
 	fs.StringVar(&cfg.Run.CPUProfilePath, "cpu-profile-path", "", wh("Path to CPU profile output file"))
 	fs.StringVar(&cfg.Run.MemProfilePath, "mem-profile-path", "", wh("Path to memory profile output file"))
 	fs.IntVarP(&cfg.Run.Concurrency, "concurrency", "j", getDefaultConcurrency(), wh("Concurrency (default NumCPU)"))

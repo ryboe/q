@@ -341,7 +341,7 @@ func GitPatch(revisionFrom, revisionTo string) (io.Reader, []string, error) {
 
 	// make a patch for untracked files
 	var newFiles []string
-	ls, err := exec.Command("git", "ls-files", "-o").CombinedOutput()
+	ls, err := exec.Command("git", "ls-files", "--others", "--exclude-standard").CombinedOutput()
 	if err != nil {
 		return nil, nil, fmt.Errorf("error executing git ls-files: %s", err)
 	}
