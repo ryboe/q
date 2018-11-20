@@ -6,9 +6,10 @@ import (
 	"go/ast"
 	"go/token"
 
+	lintAPI "github.com/golangci/lint-1"
+
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	lintAPI "github.com/golangci/lint-1"
 )
 
 type Golint struct{}
@@ -24,8 +25,8 @@ func (Golint) Desc() string {
 func (g Golint) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	var issues []result.Issue
 	var lintErr error
-	for _, pkg := range lintCtx.PkgProgram.Packages() {
-		files, fset, err := getASTFilesForPkg(lintCtx, &pkg)
+	for _, pkg := range lintCtx.Packages {
+		files, fset, err := getASTFilesForGoPkg(lintCtx, pkg)
 		if err != nil {
 			return nil, err
 		}

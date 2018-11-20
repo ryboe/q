@@ -7,9 +7,10 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/golangci/misspell"
+
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/golangci/misspell"
 )
 
 type Misspell struct{}
@@ -43,7 +44,7 @@ func (lint Misspell) Run(ctx context.Context, lintCtx *linter.Context) ([]result
 	r.Compile()
 
 	var res []result.Issue
-	for _, f := range lintCtx.PkgProgram.Files(lintCtx.Cfg.Run.AnalyzeTests) {
+	for _, f := range getAllFileNames(lintCtx) {
 		fileContent, err := ioutil.ReadFile(f)
 		if err != nil {
 			return nil, fmt.Errorf("can't read file %s: %s", f, err)

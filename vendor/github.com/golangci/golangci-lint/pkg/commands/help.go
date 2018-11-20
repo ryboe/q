@@ -6,9 +6,10 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
-	"github.com/spf13/cobra"
 )
 
 func (e *Executor) initHelp() {
@@ -38,7 +39,7 @@ func printLinterConfigs(lcs []linter.Config) {
 			altNamesStr = fmt.Sprintf(" (%s)", strings.Join(lc.AlternativeNames, ", "))
 		}
 		fmt.Fprintf(logutils.StdOut, "%s%s: %s [fast: %t]\n", color.YellowString(lc.Name()),
-			altNamesStr, lc.Linter.Desc(), !lc.DoesFullImport)
+			altNamesStr, lc.Linter.Desc(), !lc.NeedsSSARepr)
 	}
 }
 

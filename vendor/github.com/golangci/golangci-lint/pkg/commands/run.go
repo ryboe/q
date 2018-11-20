@@ -11,6 +11,10 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/exitcodes"
 	"github.com/golangci/golangci-lint/pkg/lint"
@@ -18,9 +22,6 @@ import (
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/printers"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 func getDefaultExcludeHelp() string {
@@ -75,16 +76,19 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager) {
 	lsc := &cfg.LintersSettings
 
 	// Hide all linters settings flags: they were initially visible,
-	// but when number of linters started to grow it became ovious that
+	// but when number of linters started to grow it became obvious that
 	// we can't fill 90% of flags by linters settings: common flags became hard to find.
 	// New linters settings should be done only through config file.
 	fs.BoolVar(&lsc.Errcheck.CheckTypeAssertions, "errcheck.check-type-assertions",
 		false, "Errcheck: check for ignored type assertion results")
 	hideFlag("errcheck.check-type-assertions")
-
 	fs.BoolVar(&lsc.Errcheck.CheckAssignToBlank, "errcheck.check-blank", false,
 		"Errcheck: check for errors assigned to blank identifier: _ = errFunc()")
 	hideFlag("errcheck.check-blank")
+	fs.StringVar(&lsc.Errcheck.Exclude, "errcheck.exclude", "", "errcheck.exclude")
+	hideFlag("errcheck.exclude")
+	fs.Var(&lsc.Errcheck.Ignore, "errcheck.ignore", "errcheck.ignore")
+	hideFlag("errcheck.ignore")
 
 	fs.BoolVar(&lsc.Govet.CheckShadowing, "govet.check-shadowing", false,
 		"Govet: check for shadowed variables")
@@ -138,7 +142,7 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager) {
 	fs.StringSliceVarP(&lc.Presets, "presets", "p", nil,
 		wh(fmt.Sprintf("Enable presets (%s) of linters. Run 'golangci-lint linters' to see "+
 			"them. This option implies option --disable-all", strings.Join(m.AllPresets(), "|"))))
-	fs.BoolVar(&lc.Fast, "fast", false, wh("Run only fast linters from enabled linters set"))
+	fs.BoolVar(&lc.Fast, "fast", false, wh("Run only fast linters from enabled linters set (first run won't be fast)"))
 
 	// Issues config
 	ic := &cfg.Issues
@@ -254,12 +258,13 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan resul
 		e.reportData.AddLinter(lc.Name(), isEnabled, lc.EnabledByDefault)
 	}
 
-	lintCtx, err := lint.LoadContext(enabledLinters, e.cfg, e.log.Child("load"))
+	lintCtx, err := e.contextLoader.Load(ctx, enabledLinters)
 	if err != nil {
 		return nil, errors.Wrap(err, "context loading failed")
 	}
+	lintCtx.Log = e.log.Child("linters context")
 
-	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"))
+	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"), e.goenv)
 	if err != nil {
 		return nil, err
 	}
@@ -300,6 +305,10 @@ func (e *Executor) setExitCodeIfIssuesFound(issues <-chan result.Issue) <-chan r
 }
 
 func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
+	if err := e.goenv.Discover(ctx); err != nil {
+		e.log.Warnf("Failed to discover go env: %s", err)
+	}
+
 	if !logutils.HaveDebugTag("linters_output") {
 		// Don't allow linters and loader to print anything
 		log.SetOutput(ioutil.Discard)
@@ -376,8 +385,20 @@ func (e *Executor) executeRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if e.exitCode == exitcodes.Success && ctx.Err() != nil {
+	e.setupExitCode(ctx)
+}
+
+func (e *Executor) setupExitCode(ctx context.Context) {
+	if ctx.Err() != nil {
 		e.exitCode = exitcodes.Timeout
+		e.log.Errorf("Deadline exceeded: try increase it by passing --deadline option")
+	}
+
+	if e.exitCode == exitcodes.Success &&
+		os.Getenv("GL_TEST_RUN") == "1" &&
+		len(e.reportData.Warnings) != 0 {
+
+		e.exitCode = exitcodes.WarningInTest
 	}
 }
 

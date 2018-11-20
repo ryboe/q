@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	ineffassignAPI "github.com/golangci/ineffassign"
+
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	ineffassignAPI "github.com/golangci/ineffassign"
 )
 
 type Ineffassign struct{}
@@ -20,7 +21,7 @@ func (Ineffassign) Desc() string {
 }
 
 func (lint Ineffassign) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
-	issues := ineffassignAPI.Run(lintCtx.PkgProgram.Files(lintCtx.Cfg.Run.AnalyzeTests))
+	issues := ineffassignAPI.Run(getAllFileNames(lintCtx))
 	if len(issues) == 0 {
 		return nil, nil
 	}

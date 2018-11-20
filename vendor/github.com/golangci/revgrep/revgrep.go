@@ -80,7 +80,6 @@ func (c *Checker) preparePatch() error {
 	return nil
 }
 
-// InputIssue represents issue found by some linter
 type InputIssue interface {
 	FilePath() string
 	Line() int
@@ -99,14 +98,12 @@ func (i simpleInputIssue) Line() int {
 	return i.lineNumber
 }
 
-// Prepare extracts a patch and changed lines
 func (c *Checker) Prepare() error {
 	returnErr := c.preparePatch()
 	c.changes = c.linesChanged()
 	return returnErr
 }
 
-// IsNewIssue checks whether issue found by linter is new: it was found in changed lines
 func (c Checker) IsNewIssue(i InputIssue) (hunkPos int, isNew bool) {
 	fchanges, ok := c.changes[i.FilePath()]
 	if !ok { // file wasn't changed
@@ -119,7 +116,7 @@ func (c Checker) IsNewIssue(i InputIssue) (hunkPos int, isNew bool) {
 	)
 	// found file, see if lines matched
 	for _, pos := range fchanges {
-		if pos.lineNo == i.Line() {
+		if pos.lineNo == int(i.Line()) {
 			fpos = pos
 			changed = true
 			break
@@ -341,7 +338,7 @@ func GitPatch(revisionFrom, revisionTo string) (io.Reader, []string, error) {
 
 	// make a patch for untracked files
 	var newFiles []string
-	ls, err := exec.Command("git", "ls-files", "--others", "--exclude-standard").CombinedOutput()
+	ls, err := exec.Command("git", "ls-files", "-o").CombinedOutput()
 	if err != nil {
 		return nil, nil, fmt.Errorf("error executing git ls-files: %s", err)
 	}
