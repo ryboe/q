@@ -13,11 +13,15 @@ import (
 	"github.com/golangci/go-tools/unused"
 	"github.com/golangci/tools/go/ssa"
 	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/golangci/golangci-lint/pkg/fsutils"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
+	libpackages "github.com/golangci/golangci-lint/pkg/packages"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
+
+const megacheckName = "megacheck"
 
 type Megacheck struct {
 	UnusedEnabled      bool
@@ -42,7 +46,7 @@ func (m Megacheck) Name() string {
 	}
 
 	if len(names) == 3 {
-		return "megacheck" // all enabled
+		return megacheckName // all enabled
 	}
 
 	return fmt.Sprintf("megacheck.{%s}", strings.Join(names, ","))
@@ -59,7 +63,7 @@ func (m Megacheck) Desc() string {
 	return descs[m.Name()]
 }
 
-func prettifyCompilationError(err error) error {
+func prettifyCompilationError(err packages.Error) error {
 	i, _ := TypeCheck{}.parseError(err)
 	if i == nil {
 		return err
@@ -80,15 +84,15 @@ func prettifyCompilationError(err error) error {
 
 func (m Megacheck) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	if len(lintCtx.NotCompilingPackages) != 0 {
-		var packages []string
-		var errors []error
+		var errPkgs []string
+		var errors []packages.Error
 		for _, p := range lintCtx.NotCompilingPackages {
-			packages = append(packages, p.String())
-			errors = append(errors, p.Errors...)
+			errPkgs = append(errPkgs, p.String())
+			errors = append(errors, libpackages.ExtractErrors(p)...)
 		}
 
 		warnText := fmt.Sprintf("Can't run megacheck because of compilation errors in packages %s",
-			packages)
+			errPkgs)
 		if len(errors) != 0 {
 			warnText += fmt.Sprintf(": %s", prettifyCompilationError(errors[0]))
 			if len(errors) > 1 {
@@ -102,7 +106,7 @@ func (m Megacheck) Run(ctx context.Context, lintCtx *linter.Context) ([]result.I
 		return nil, nil
 	}
 
-	issues := runMegacheck(lintCtx.Program, lintCtx.SSAProgram, lintCtx.LoaderConfig,
+	issues := runMegacheck(lintCtx.Program, lintCtx.MegacheckSSAProgram, lintCtx.LoaderConfig,
 		m.StaticcheckEnabled, m.GosimpleEnabled, m.UnusedEnabled, lintCtx.Settings().Unused.CheckExported)
 	if len(issues) == 0 {
 		return nil, nil
@@ -147,6 +151,6 @@ func runMegacheck(program *loader.Program, ssaProg *ssa.Program, conf *loader.Co
 		})
 	}
 
-	fs := lintutil.FlagSet("megacheck")
+	fs := lintutil.FlagSet(megacheckName)
 	return lintutil.ProcessFlagSet(checkers, fs, program, ssaProg, conf)
 }

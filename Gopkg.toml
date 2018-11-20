@@ -4,7 +4,7 @@ required = [
 
 [[constraint]]
   name = "github.com/golangci/golangci-lint"
-  version = "^1.10.0"
+  version = "^1.12.0"
 
 [[constraint]]
   name = "github.com/kr/pretty"

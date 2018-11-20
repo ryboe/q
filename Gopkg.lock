@@ -26,6 +26,85 @@
   version = "v1.4.7"
 
 [[projects]]
+  branch = "master"
+  digest = "1:e36c5693d86876489df9083e40a0b25ae11f4ada2150a9389618667d0fa8aa65"
+  name = "github.com/go-critic/checkers"
+  packages = [
+    ".",
+    "internal/lintutil",
+  ]
+  pruneopts = "NUT"
+  revision = "7b975f8b9908d5a87b87d1871cc23b428230d928"
+
+[[projects]]
+  digest = "1:03154a7ad5348d6e8ed3a41d73b05ec5f438ec97efbb7b57fb70a7a77ca8553e"
+  name = "github.com/go-lintpack/lintpack"
+  packages = [
+    ".",
+    "astwalk",
+    "internal/lintutil",
+  ]
+  pruneopts = "NUT"
+  revision = "b42d32fbe26f8d1fc773e5ba3c2c31c5b9274ea9"
+  version = "v0.5.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b93f3bf983a8e74e356c924ed0f6587f0e49b06186f924e92f1956588763a696"
+  name = "github.com/go-toolsmith/astcast"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b7a89ed70af1429e7518626ab0aee535a84a6b20"
+
+[[projects]]
+  digest = "1:0a50fd8f3a8ba3c4f3259843c9cb20f80323044cfbf655b676b9dff71b1e9113"
+  name = "github.com/go-toolsmith/astcopy"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "79b422d080c469383ec3cf020d124b70d073956b"
+  version = "0.9.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fe7b3bf35d2d193fb401716d77c1cdda88bbe404c16337d72e3d76e16a60548e"
+  name = "github.com/go-toolsmith/astequal"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "dcb477bfacd6e00a13c6d63bfc73db28dd343160"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8be866c5440f42cdb1eaca8a7c36feb2152779d4f0af6c347550134ef8693df2"
+  name = "github.com/go-toolsmith/astfmt"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "8f8ee99c30864ae6d51ec6c8454d72a5072fe703"
+
+[[projects]]
+  branch = "master"
+  digest = "1:817d58abc67853a941486454df0f34eb694794bbfe8ab305b51eaf928364fa10"
+  name = "github.com/go-toolsmith/astp"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "0af7e3c24f3087820a2e96679d064e6a56c624e2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7e1d693cbb761f0ac4dd354cbb4c95633e2f788c1968f50b13096157605cbd76"
+  name = "github.com/go-toolsmith/strparse"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "830b6daa1241714c12a9b9a4a56849fe2f93aedc"
+
+[[projects]]
+  branch = "master"
+  digest = "1:46caf39e09e9db39dff0b0d10ce07bc1255ae460fba2db8c5d89bfcfa36efa7b"
+  name = "github.com/go-toolsmith/typep"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d63dc7650676b3b54b2e2f01057303e3bf9a09c5"
+
+[[projects]]
   digest = "1:6a7159c5f8f8826207545407a458b43ab6599c1c8a2271465c2e979ecea1dcd4"
   name = "github.com/gobwas/glob"
   packages = [
@@ -140,17 +219,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:66fcab6100e2be1bb31ae5494a0eb928690e2a4bf739d44eb2923ac7dd687e03"
+  digest = "1:7fa19fb714538cab3783505a0aca7b8e970d30f5149a13a8adcb37290a2e570a"
   name = "github.com/golangci/gofmt"
   packages = [
     "gofmt",
     "goimports",
   ]
   pruneopts = "NUT"
-  revision = "2076e05ced53480baa8ba14a05b80a415bec9377"
+  revision = "f021c4179c8204f48aa93990e6badea1b3f9446d"
 
 [[projects]]
-  digest = "1:af0fa1acf38bbbe0561c14f45631268e9321fb34cf2754b8c7a71555eb930459"
+  digest = "1:0a04acad62c61d35cb112c8334f8dc8f8db063aa2db295aea979f2e2b1786143"
   name = "github.com/golangci/golangci-lint"
   packages = [
     "cmd/golangci-lint",
@@ -159,7 +238,7 @@
     "pkg/exitcodes",
     "pkg/fsutils",
     "pkg/golinters",
-    "pkg/goutils",
+    "pkg/goutil",
     "pkg/lint",
     "pkg/lint/astcache",
     "pkg/lint/linter",
@@ -173,8 +252,8 @@
     "pkg/timeutils",
   ]
   pruneopts = "NUT"
-  revision = "dbfcf633d5f7b6544efa07d36798600a6f786005"
-  version = "v1.10.2"
+  revision = "898ae4d3647ceb1404ca9ee25f20b0c9ea373849"
+  version = "v1.12.2"
 
 [[projects]]
   branch = "master"
@@ -265,7 +344,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ba7223001c6b9de88a3e5beb6e441b3d559e09e3e9bc8ff866b2c0e72a6f7f8f"
+  digest = "1:45178302fc877a0241feedf55c941f8cc03212c186be434ee046c1951dd607cc"
   name = "github.com/golangci/tools"
   packages = [
     "go/callgraph",
@@ -274,9 +353,12 @@
     "go/callgraph/static",
     "go/ssa",
     "go/ssa/ssautil",
+    "imports",
+    "internal/fastwalk",
+    "internal/gopathwalk",
   ]
   pruneopts = "NUT"
-  revision = "98e75f53b4b9b9243ddc6f08b76f7682294b53b5"
+  revision = "2cefd77fef9bfb73433915eda645312d40a2078d"
 
 [[projects]]
   branch = "master"
@@ -423,12 +505,12 @@
   version = "v0.8.0"
 
 [[projects]]
-  digest = "1:ecf78eacf406c42f07f66d6b79fda24d2b92dc711bfd0760d0c931678f9621fe"
+  digest = "1:d848e2bdc690ea54c4b49894b67a05db318a97ee6561879b814c2c1f82f61406"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
-  version = "v1.1.1"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:330e9062b308ac597e28485699c02223bd052437a6eed32a173c9227dcb9d95a"
@@ -442,12 +524,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:3fa7947ca83b98ae553590d993886e845a4bff19b7b007e869c6e0dd3b9da9cd"
+  digest = "1:c5e6b121ef3d2043505edaf4c80e5a008cec2513dc8804795eb0479d1555bcf7"
   name = "github.com/spf13/cast"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:343d44e06621142ab09ae0c76c1799104cdfddd3ffb445d78b1adf8dc3ffaf3d"
@@ -487,7 +569,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "NUT"
-  revision = "a92615f3c49003920a58dedcf32cf55022cefb8d"
+  revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
   branch = "master"
@@ -495,18 +577,18 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "NUT"
-  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
+  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
 
 [[projects]]
   branch = "master"
-  digest = "1:71bcac4a94abe8132ef9c2bf008cca9579cda20194383b210b8d2e125777e982"
+  digest = "1:1435bb97e37d0ba44239bcaf413539d3bcfc37098c24f1c795c49d654af5e956"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
+  revision = "ec83556a53fe16b65c452a104ea9d1e86a671852"
 
 [[projects]]
   digest = "1:5a8c9713f32ff4b05072d1eb87b1b2c3feacb061c1300519cbe12c946a853500"
@@ -526,7 +608,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f8db118015c25371a6abc9fdde81a44a5009b21910a1d55a4c8228b783ec0f0b"
+  digest = "1:3f26b616172cb133557cffe9288d36dcaded50acac3f85660911c03c5dff4584"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -535,13 +617,14 @@
     "go/internal/cgo",
     "go/internal/gcimporter",
     "go/loader",
+    "go/packages",
     "go/types/typeutil",
-    "imports",
     "internal/fastwalk",
     "internal/gopathwalk",
+    "internal/semver",
   ]
   pruneopts = "NUT"
-  revision = "c0eb142035b5aa4db001a5cc0703b55a8fbf9540"
+  revision = "9c8bd463e3aca40b6288cd14f7b7703206ff743b"
 
 [[projects]]
   digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
@@ -552,12 +635,12 @@
   version = "v2.2.1"
 
 [[projects]]
-  branch = "master"
   digest = "1:17f57ca0d1ba2c234063d64ffd589c349eb00cc3dc211df50f47e81f3d971589"
   name = "sourcegraph.com/sourcegraph/go-diff"
   packages = ["diff"]
   pruneopts = "NUT"
-  revision = "119ab63a9fb25c4f02d0bc8088c61bac0f449f7d"
+  revision = "c613306ac97fb4807862c088149199f0dab8685a"
+  version = "v0.5.0"
 
 [[projects]]
   digest = "1:6b1ed3514b803e40c881e6c432da3a339c5bbfb7a267b9906e77bb0c408eae77"

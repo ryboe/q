@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"go/token"
 
+	"github.com/golangci/tools/imports" // TODO: replace with x/tools when use it in golangci/gofmt/gofmt
+
 	gofmtAPI "github.com/golangci/gofmt/gofmt"
 	goimportsAPI "github.com/golangci/gofmt/goimports"
+	"sourcegraph.com/sourcegraph/go-diff/diff"
+
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"sourcegraph.com/sourcegraph/go-diff/diff"
 )
 
 type Gofmt struct {
@@ -105,10 +108,11 @@ func (g Gofmt) extractIssuesFromPatch(patch string, log logutils.Log) ([]result.
 func (g Gofmt) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	var issues []result.Issue
 
-	for _, f := range lintCtx.PkgProgram.Files(lintCtx.Cfg.Run.AnalyzeTests) {
+	for _, f := range getAllFileNames(lintCtx) {
 		var diff []byte
 		var err error
 		if g.UseGoimports {
+			imports.LocalPrefix = lintCtx.Settings().Goimports.LocalPrefixes
 			diff, err = goimportsAPI.Run(f)
 		} else {
 			diff, err = gofmtAPI.Run(f, lintCtx.Settings().Gofmt.Simplify)

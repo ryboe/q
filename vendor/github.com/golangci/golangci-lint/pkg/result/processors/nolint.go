@@ -7,9 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
-
 	"github.com/golangci/golangci-lint/pkg/lint/astcache"
+	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
@@ -84,7 +83,7 @@ func (p *Nolint) getOrCreateFileData(i *result.Issue) (*fileData, error) {
 	fd = &fileData{}
 	p.cache[i.FilePath()] = fd
 
-	file := p.astCache.GetOrParse(i.FilePath())
+	file := p.astCache.GetOrParse(i.FilePath(), nil)
 	if file.Err != nil {
 		return nil, fmt.Errorf("can't parse file %s: %s", i.FilePath(), file.Err)
 	}
@@ -149,6 +148,7 @@ func (e *rangeExpander) Visit(node ast.Node) ast.Visitor {
 	var foundRange *ignoredRange
 	for _, r := range e.inlineRanges {
 		if r.To == nodeStartLine-1 && nodeStartPos.Column == r.col {
+			r := r
 			foundRange = &r
 			break
 		}
