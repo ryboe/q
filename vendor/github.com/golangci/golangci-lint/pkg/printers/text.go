@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
+
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
@@ -37,6 +38,7 @@ func (p Text) SprintfColored(ca color.Attribute, format string, args ...interfac
 
 func (p *Text) Print(ctx context.Context, issues <-chan result.Issue) error {
 	for i := range issues {
+		i := i
 		p.printIssue(&i)
 
 		if !p.printIssuedLine {

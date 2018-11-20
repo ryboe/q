@@ -3,6 +3,9 @@ sudo: false
 
 language: go
 
+env:
+  - GO111MODULE=on
+
 go:
   - 1.x
 
@@ -18,7 +21,7 @@ notifications:
 
 # like script, but with set -e
 before_script:
-  - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
+  - go install -mod vendor ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # like before_script, but with set +e
 script:
