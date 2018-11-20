@@ -73,13 +73,13 @@ func TestHeader(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		timer := getTimer(tc.timerExpired)
-
 		l := &logger{
 			buf:      &bytes.Buffer{},
-			timer:    timer,
 			lastFile: tc.lastFile,
 			lastFunc: tc.lastFunc,
+		}
+		if !tc.timerExpired {
+			l.lastWrite = time.Now()
 		}
 
 		const line = 123
@@ -103,18 +103,6 @@ func TestHeader(t *testing.T) {
 	}
 }
 
-// getTimer returns an expire timer or a 5s timer.
-func getTimer(expired bool) *time.Timer {
-	var timer *time.Timer
-	if expired {
-		timer = time.NewTimer(0)
-		timer.Stop()
-	} else {
-		timer = time.NewTimer(5 * time.Second)
-	}
-	return timer
-}
-
 // TestOutput verifies that logger.output() prints the expected output to the
 // log buffer.
 func TestOutput(t *testing.T) {
@@ -126,7 +114,6 @@ func TestOutput(t *testing.T) {
 			args: []string{fmt.Sprintf("%s=%s", colorize("a", bold), colorize("int(1)", cyan))},
 			want: fmt.Sprintf("%s %s=%s\n", colorize("0.000s", yellow), colorize("a", bold), colorize("int(1)", cyan)),
 		},
-		// TODO: more tests
 	}
 
 	for _, tc := range testCases {
