@@ -4,6 +4,8 @@ run:
 
 linters:
   enable-all: true
+  disable:
+    - scopelint
 
 linters-settings:
   gocyclo:

@@ -1,7 +1,13 @@
 package config
 
 import (
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/golangci/golangci-lint/pkg/logutils"
 )
 
 const (
@@ -54,6 +60,31 @@ var DefaultExcludePatterns = []ExcludePattern{
 		Linter:  "megacheck",
 		Why:     "Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore",
 	},
+	{
+		Pattern: "Use of unsafe calls should be audited",
+		Linter:  "gosec",
+		Why:     "Too many false-positives on 'unsafe' usage",
+	},
+	{
+		Pattern: "Subprocess launch(ed with variable|ing should be audited)",
+		Linter:  "gosec",
+		Why:     "Too many false-positives for parametrized shell calls",
+	},
+	{
+		Pattern: "G104",
+		Linter:  "gosec",
+		Why:     "Duplicated errcheck checks",
+	},
+	{
+		Pattern: "(Expect directory permissions to be 0750 or less|Expect file permissions to be 0600 or less)",
+		Linter:  "gosec",
+		Why:     "Too many issues in popular repos",
+	},
+	{
+		Pattern: "Potential file inclusion via variable",
+		Linter:  "gosec",
+		Why:     "False positive is triggered by 'src, err := ioutil.ReadFile(filename)'",
+	},
 }
 
 func GetDefaultExcludePatternsStrings() []string {
@@ -90,19 +121,17 @@ type Run struct {
 }
 
 type LintersSettings struct {
-	Errcheck struct {
-		CheckTypeAssertions bool `mapstructure:"check-type-assertions"`
-		CheckAssignToBlank  bool `mapstructure:"check-blank"`
-	}
 	Govet struct {
-		CheckShadowing       bool `mapstructure:"check-shadowing"`
-		UseInstalledPackages bool `mapstructure:"use-installed-packages"`
+		CheckShadowing bool `mapstructure:"check-shadowing"`
 	}
 	Golint struct {
 		MinConfidence float64 `mapstructure:"min-confidence"`
 	}
 	Gofmt struct {
 		Simplify bool
+	}
+	Goimports struct {
+		LocalPrefixes string `mapstructure:"local-prefixes"`
 	}
 	Gocyclo struct {
 		MinComplexity int `mapstructure:"min-complexity"`
@@ -139,6 +168,15 @@ type LintersSettings struct {
 	Unparam  UnparamSettings
 	Nakedret NakedretSettings
 	Prealloc PreallocSettings
+	Errcheck ErrcheckSettings
+	Gocritic GocriticSettings
+}
+
+type ErrcheckSettings struct {
+	CheckTypeAssertions bool       `mapstructure:"check-type-assertions"`
+	CheckAssignToBlank  bool       `mapstructure:"check-blank"`
+	Ignore              IgnoreFlag `mapstructure:"ignore"`
+	Exclude             string     `mapstructure:"exclude"`
 }
 
 type LllSettings struct {
@@ -161,6 +199,85 @@ type PreallocSettings struct {
 	ForLoops   bool `mapstructure:"for-loops"`
 }
 
+type GocriticCheckSettings map[string]interface{}
+
+type GocriticSettings struct {
+	EnabledChecks    []string                         `mapstructure:"enabled-checks"`
+	DisabledChecks   []string                         `mapstructure:"disabled-checks"`
+	SettingsPerCheck map[string]GocriticCheckSettings `mapstructure:"settings"`
+
+	inferredEnabledChecks map[string]bool
+}
+
+func (s *GocriticSettings) InferEnabledChecks(log logutils.Log) {
+	enabledChecks := s.EnabledChecks
+	if len(enabledChecks) == 0 {
+		if len(s.DisabledChecks) != 0 {
+			for _, defaultCheck := range defaultGocriticEnabledChecks {
+				if !s.isCheckDisabled(defaultCheck) {
+					enabledChecks = append(enabledChecks, defaultCheck)
+				}
+			}
+		} else {
+			enabledChecks = defaultGocriticEnabledChecks
+		}
+	}
+
+	s.inferredEnabledChecks = map[string]bool{}
+	for _, check := range enabledChecks {
+		s.inferredEnabledChecks[strings.ToLower(check)] = true
+	}
+	log.Infof("Gocritic enabled checks: %s", enabledChecks)
+}
+
+func (s GocriticSettings) isCheckDisabled(name string) bool {
+	for _, disabledCheck := range s.DisabledChecks {
+		if disabledCheck == name {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s GocriticSettings) Validate(log logutils.Log) error {
+	if len(s.EnabledChecks) != 0 && len(s.DisabledChecks) != 0 {
+		return errors.New("both enabled and disabled check aren't allowed for gocritic")
+	}
+
+	for checkName := range s.SettingsPerCheck {
+		if !s.IsCheckEnabled(checkName) {
+			log.Warnf("Gocritic settings were provided for not enabled check %q", checkName)
+		}
+	}
+
+	return nil
+}
+
+func (s GocriticSettings) IsCheckEnabled(name string) bool {
+	return s.inferredEnabledChecks[strings.ToLower(name)]
+}
+
+var defaultGocriticEnabledChecks = []string{
+	"appendAssign",
+	"assignOp",
+	"caseOrder",
+	"dupArg",
+	"dupBranchBody",
+	"dupCase",
+	"flagDeref",
+	"ifElseChain",
+	"regexpMust",
+	"singleCaseSwitch",
+	"sloppyLen",
+	"switchTrue",
+	"typeSwitchVar",
+	"underef",
+	"unlambda",
+	"unslice",
+	"defaultCaseOrder",
+}
+
 var defaultLintersSettings = LintersSettings{
 	Lll: LllSettings{
 		LineLength: 120,
@@ -176,6 +293,12 @@ var defaultLintersSettings = LintersSettings{
 		Simple:     true,
 		RangeLoops: true,
 		ForLoops:   false,
+	},
+	Errcheck: ErrcheckSettings{
+		Ignore: IgnoreFlag{},
+	},
+	Gocritic: GocriticSettings{
+		SettingsPerCheck: map[string]GocriticCheckSettings{},
 	},
 }
 
@@ -222,4 +345,48 @@ func NewDefault() *Config {
 	return &Config{
 		LintersSettings: defaultLintersSettings,
 	}
+}
+
+// IgnoreFlags was taken from errcheck in order to keep the API identical.
+// https://github.com/kisielk/errcheck/blob/1787c4bee836470bf45018cfbc783650db3c6501/main.go#L25-L60
+type IgnoreFlag map[string]*regexp.Regexp
+
+func (f IgnoreFlag) String() string {
+	pairs := make([]string, 0, len(f))
+	for pkg, re := range f {
+		prefix := ""
+		if pkg != "" {
+			prefix = pkg + ":"
+		}
+		pairs = append(pairs, prefix+re.String())
+	}
+	return fmt.Sprintf("%q", strings.Join(pairs, ","))
+}
+
+func (f IgnoreFlag) Set(s string) error {
+	if s == "" {
+		return nil
+	}
+	for _, pair := range strings.Split(s, ",") {
+		colonIndex := strings.Index(pair, ":")
+		var pkg, re string
+		if colonIndex == -1 {
+			pkg = ""
+			re = pair
+		} else {
+			pkg = pair[:colonIndex]
+			re = pair[colonIndex+1:]
+		}
+		regex, err := regexp.Compile(re)
+		if err != nil {
+			return err
+		}
+		f[pkg] = regex
+	}
+	return nil
+}
+
+// Type returns the type of the flag follow the pflag format.
+func (IgnoreFlag) Type() string {
+	return "stringToRegexp"
 }

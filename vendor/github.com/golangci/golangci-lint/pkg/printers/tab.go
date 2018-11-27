@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/fatih/color"
+
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
@@ -32,6 +33,7 @@ func (p *Tab) Print(ctx context.Context, issues <-chan result.Issue) error {
 	w := tabwriter.NewWriter(logutils.StdOut, 0, 0, 2, ' ', 0)
 
 	for i := range issues {
+		i := i
 		p.printIssue(&i, w)
 	}
 
