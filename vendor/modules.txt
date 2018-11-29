@@ -69,11 +69,12 @@ github.com/golangci/gocyclo/pkg/gocyclo
 # github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.12.2
+# github.com/golangci/golangci-lint v1.12.3
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/pkg/commands
 github.com/golangci/golangci-lint/pkg/config
 github.com/golangci/golangci-lint/pkg/exitcodes
+github.com/golangci/golangci-lint/pkg/fsutils
 github.com/golangci/golangci-lint/pkg/goutil
 github.com/golangci/golangci-lint/pkg/lint
 github.com/golangci/golangci-lint/pkg/lint/linter
@@ -82,7 +83,6 @@ github.com/golangci/golangci-lint/pkg/logutils
 github.com/golangci/golangci-lint/pkg/printers
 github.com/golangci/golangci-lint/pkg/report
 github.com/golangci/golangci-lint/pkg/result
-github.com/golangci/golangci-lint/pkg/fsutils
 github.com/golangci/golangci-lint/pkg/lint/astcache
 github.com/golangci/golangci-lint/pkg/packages
 github.com/golangci/golangci-lint/pkg/result/processors
@@ -151,6 +151,8 @@ github.com/magiconair/properties
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.3
 github.com/mattn/go-isatty
+# github.com/mitchellh/go-homedir v1.0.0
+github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 github.com/mitchellh/mapstructure
 # github.com/nbutton23/zxcvbn-go v0.0.0-20171102151520-eafdab6b0663
