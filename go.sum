@@ -52,8 +52,8 @@ github.com/golangci/gocyclo v0.0.0-20180528134321-2becd97e67ee h1:J2XAy40+7yz70u
 github.com/golangci/gocyclo v0.0.0-20180528134321-2becd97e67ee/go.mod h1:ozx7R9SIwqmqf5pRP90DhR2Oay2UIjGuKheCBCNwAYU=
 github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 h1:GzPqZCXdBR/5zaqMWNsxRk60z16CaQjyytNTFpei3bw=
 github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82/go.mod h1:9qCChq59u/eW8im404Q2WWTrnBUQKjpNYKMbU4M7EFU=
-github.com/golangci/golangci-lint v1.12.2 h1:TZBt0R2qFW4SZPjI549tQmciIXPtMuYZmbS4loZvmaI=
-github.com/golangci/golangci-lint v1.12.2/go.mod h1:9Mdlb3LSCoxEJPexdOVimY9OIdG8fBKGoS9xvORuG9I=
+github.com/golangci/golangci-lint v1.12.3 h1:ryqYbZV2zAx5Lg/6DEPtBgSKo1KpAWkq4iYBXsl6w2A=
+github.com/golangci/golangci-lint v1.12.3/go.mod h1:O2SNnNen3FZ8L5c+jK3dCUiWhfNka/aoGNV/9x6RVVs=
 github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb h1:Bi7BYmZVg4C+mKGi8LeohcP2GGUl2XJD4xCkJoZSaYc=
 github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb/go.mod h1:ON/c2UR0VAAv6ZEAFKhjCLplESSmRFfZcDLASbI1GWo=
 github.com/golangci/govet v0.0.0-20180818181408-44ddbe260190 h1:SLIgprnxQNjBpkz55PK1vfb64/gKU/TgVi0obFw8Lec=
@@ -100,6 +100,8 @@ github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRU
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.3 h1:ns/ykhmWi7G9O+8a448SecJU3nSMBXJfqQkl0upE1jI=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
+github.com/mitchellh/go-homedir v1.0.0 h1:vKb8ShqSby24Yrqr/yDYkuFz8d0WUjys40rvnGC8aR0=
+github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936/go.mod h1:r1VsdOzOPt1ZSrGZWFoNhsAedKnEd6r9Np1+5blZCWk=
 github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238 h1:+MZW2uvHgN8kYvksEN3f7eFL2wpzk0GxmlFsMybWc7E=
 github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
