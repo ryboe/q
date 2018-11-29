@@ -2,23 +2,23 @@ package lintpack
 
 import (
 	"fmt"
-	"go/ast"
 	"sort"
 	"strings"
 
 	"github.com/go-toolsmith/astfmt"
 )
 
+type checkerProto struct {
+	info        *CheckerInfo
+	constructor func(*Context, parameters) *Checker
+}
+
 // prototypes is a set of registered checkers that are not yet instantiated.
 // Registration should be done with AddChecker function.
 // Initialized checkers can be obtained with NewChecker function.
 var prototypes = make(map[string]checkerProto)
 
-// GetCheckersInfo returns a checkers info list for all registered checkers.
-// The slice is sorted by a checker name.
-//
-// Info objects can be used to instantiate checkers with NewChecker function.
-func GetCheckersInfo() []*CheckerInfo {
+func getCheckersInfo() []*CheckerInfo {
 	infoList := make([]*CheckerInfo, 0, len(prototypes))
 	for _, proto := range prototypes {
 		infoCopy := *proto.info
@@ -30,34 +30,7 @@ func GetCheckersInfo() []*CheckerInfo {
 	return infoList
 }
 
-// NewChecker returns initialized checker identified by an info.
-// info must be non-nil.
-// Panics if info describes a checker that was not properly registered.
-//
-// params argument specifies per-checker options.NewChecker. Can be nil.
-func NewChecker(ctx *Context, info *CheckerInfo, params map[string]interface{}) *Checker {
-	proto, ok := prototypes[info.Name]
-	if !ok {
-		panic(fmt.Sprintf("checker with name %q not registered", info.Name))
-	}
-	return proto.constructor(ctx, params)
-}
-
-// FileWalker is an interface every checker should implement.
-//
-// The WalkFile method is executed for every Go file inside the
-// package that is being checked.
-type FileWalker interface {
-	WalkFile(*ast.File)
-}
-
-// AddChecker registers a new checker into a checkers pool.
-// Constructor is used to create a new checker instance.
-// Checker name (defined in CheckerInfo.Name) must be unique.
-//
-// If checker is never needed, for example if it is disabled,
-// constructor will not be called.
-func AddChecker(info *CheckerInfo, constructor func(*CheckerContext) FileWalker) {
+func addChecker(info *CheckerInfo, constructor func(*CheckerContext) FileWalker) {
 	if _, ok := prototypes[info.Name]; ok {
 		panic(fmt.Sprintf("checker with name %q already registered", info.Name))
 	}
@@ -97,4 +70,12 @@ func AddChecker(info *CheckerInfo, constructor func(*CheckerContext) FileWalker)
 	}
 
 	prototypes[info.Name] = proto
+}
+
+func newChecker(ctx *Context, info *CheckerInfo, params map[string]interface{}) *Checker {
+	proto, ok := prototypes[info.Name]
+	if !ok {
+		panic(fmt.Sprintf("checker with name %q not registered", info.Name))
+	}
+	return proto.constructor(ctx, params)
 }

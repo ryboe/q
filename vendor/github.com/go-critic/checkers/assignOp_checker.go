@@ -18,7 +18,7 @@ func init() {
 	info.Before = `x = x * 2`
 	info.After = `x *= 2`
 
-	lintpack.AddChecker(&info, func(ctx *lintpack.CheckerContext) lintpack.FileWalker {
+	collection.AddChecker(&info, func(ctx *lintpack.CheckerContext) lintpack.FileWalker {
 		return astwalk.WalkerForStmt(&assignOpChecker{ctx: ctx})
 	})
 }

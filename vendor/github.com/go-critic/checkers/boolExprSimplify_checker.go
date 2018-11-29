@@ -24,7 +24,7 @@ b := !(x) == !(y)`
 a := elapsed < expectElapsedMin
 b := (x) == (y)`
 
-	lintpack.AddChecker(&info, func(ctx *lintpack.CheckerContext) lintpack.FileWalker {
+	collection.AddChecker(&info, func(ctx *lintpack.CheckerContext) lintpack.FileWalker {
 		return astwalk.WalkerForExpr(&boolExprSimplifyChecker{ctx: ctx})
 	})
 }
