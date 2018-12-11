@@ -108,7 +108,19 @@ In `Go`, add a new template with:
 - Template text: `q.Q($END$) // DEBUG`
 - Applicable in: select the `Go` scope
 
-#### vim/Emacs
+#### Emacs
+Add a new snippet file to the go-mode snippets directory
+(`$HOME/.emacs.d/snippets/go-mode/qq`). This should
+contain:
+```
+# -*- mode: snippet -*-
+# name: qq
+# key: qq
+# --
+q.Q(${1:...}) // DEBUG
+```
+
+#### vim
 TBD Send me a PR, please :)
 
 ## Haven't I seen this somewhere before?
