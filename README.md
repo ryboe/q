@@ -99,7 +99,7 @@ q.Q($1) // DEBUG
         'body': 'q.Q($1) // DEBUG'
 ```
 
-#### Jetbrains Intellij/GoLand
+#### JetBrains GoLand
 `Settings > Editor > Live Templates`
 
 In `Go`, add a new template with:
