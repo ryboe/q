@@ -1,0 +1,34 @@
+version: 2.1
+jobs:
+  lint:
+    docker:
+      - image: golang:1.11
+    environment:
+      GO111MODULE: 'on'
+    working_directory: /go/src/github.com/y0ssar1an/q
+    steps:
+      - checkout
+      - run: go install -mod vendor github.com/y0ssar1an/q/vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
+      - run: golangci-lint run
+  test:
+    docker:
+      - image: golang:1.11
+    environment:
+      GO111MODULE: 'on'
+    working_directory: /go/src/github.com/y0ssar1an/q
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - pkg-cache
+      - run: go test -mod vendor -v -race ./...
+      - save_cache: # cache the /go/pkg directory
+          key: pkg-cache
+          paths:
+            - '/go/pkg'
+
+workflows:
+  build_and_test:
+    jobs:
+      - lint
+      - test
