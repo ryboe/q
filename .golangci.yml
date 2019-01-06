@@ -1,5 +1,6 @@
 run:
   deadline: 1m
+  modules-download-mode: vendor
   tests: true
 
 linters:
