@@ -1,11 +1,7 @@
 package config
 
 import (
-	"errors"
-	"strings"
 	"time"
-
-	"github.com/golangci/golangci-lint/pkg/logutils"
 )
 
 const (
@@ -55,7 +51,7 @@ var DefaultExcludePatterns = []ExcludePattern{
 	},
 	{
 		Pattern: "ineffective break statement. Did you mean to break out of the outer loop",
-		Linter:  "megacheck",
+		Linter:  "staticcheck",
 		Why:     "Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore",
 	},
 	{
@@ -196,85 +192,6 @@ type PreallocSettings struct {
 	Simple     bool
 	RangeLoops bool `mapstructure:"range-loops"`
 	ForLoops   bool `mapstructure:"for-loops"`
-}
-
-type GocriticCheckSettings map[string]interface{}
-
-type GocriticSettings struct {
-	EnabledChecks    []string                         `mapstructure:"enabled-checks"`
-	DisabledChecks   []string                         `mapstructure:"disabled-checks"`
-	SettingsPerCheck map[string]GocriticCheckSettings `mapstructure:"settings"`
-
-	inferredEnabledChecks map[string]bool
-}
-
-func (s *GocriticSettings) InferEnabledChecks(log logutils.Log) {
-	enabledChecks := s.EnabledChecks
-	if len(enabledChecks) == 0 {
-		if len(s.DisabledChecks) != 0 {
-			for _, defaultCheck := range defaultGocriticEnabledChecks {
-				if !s.isCheckDisabled(defaultCheck) {
-					enabledChecks = append(enabledChecks, defaultCheck)
-				}
-			}
-		} else {
-			enabledChecks = defaultGocriticEnabledChecks
-		}
-	}
-
-	s.inferredEnabledChecks = map[string]bool{}
-	for _, check := range enabledChecks {
-		s.inferredEnabledChecks[strings.ToLower(check)] = true
-	}
-	log.Infof("Gocritic enabled checks: %s", enabledChecks)
-}
-
-func (s GocriticSettings) isCheckDisabled(name string) bool {
-	for _, disabledCheck := range s.DisabledChecks {
-		if disabledCheck == name {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (s GocriticSettings) Validate(log logutils.Log) error {
-	if len(s.EnabledChecks) != 0 && len(s.DisabledChecks) != 0 {
-		return errors.New("both enabled and disabled check aren't allowed for gocritic")
-	}
-
-	for checkName := range s.SettingsPerCheck {
-		if !s.IsCheckEnabled(checkName) {
-			log.Warnf("Gocritic settings were provided for not enabled check %q", checkName)
-		}
-	}
-
-	return nil
-}
-
-func (s GocriticSettings) IsCheckEnabled(name string) bool {
-	return s.inferredEnabledChecks[strings.ToLower(name)]
-}
-
-var defaultGocriticEnabledChecks = []string{
-	"appendAssign",
-	"assignOp",
-	"caseOrder",
-	"dupArg",
-	"dupBranchBody",
-	"dupCase",
-	"flagDeref",
-	"ifElseChain",
-	"regexpMust",
-	"singleCaseSwitch",
-	"sloppyLen",
-	"switchTrue",
-	"typeSwitchVar",
-	"underef",
-	"unlambda",
-	"unslice",
-	"defaultCaseOrder",
 }
 
 var defaultLintersSettings = LintersSettings{

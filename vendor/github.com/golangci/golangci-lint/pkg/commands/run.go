@@ -27,9 +27,11 @@ import (
 func getDefaultExcludeHelp() string {
 	parts := []string{"Use or not use default excludes:"}
 	for _, ep := range config.DefaultExcludePatterns {
-		parts = append(parts, fmt.Sprintf("  # %s: %s", ep.Linter, ep.Why))
-		parts = append(parts, fmt.Sprintf("  - %s", color.YellowString(ep.Pattern)))
-		parts = append(parts, "")
+		parts = append(parts,
+			fmt.Sprintf("  # %s: %s", ep.Linter, ep.Why),
+			fmt.Sprintf("  - %s", color.YellowString(ep.Pattern)),
+			"",
+		)
 	}
 	return strings.Join(parts, "\n")
 }
@@ -184,7 +186,7 @@ func (e *Executor) initRunConfiguration(cmd *cobra.Command) {
 	initFlagSet(fs, e.cfg, e.DBManager, true)
 }
 
-func (e Executor) getConfigForCommandLine() (*config.Config, error) {
+func (e *Executor) getConfigForCommandLine() (*config.Config, error) {
 	// We use another pflag.FlagSet here to not set `changed` flag
 	// on cmd.Flags() options. Otherwise string slice options will be duplicated.
 	fs := pflag.NewFlagSet("config flag set", pflag.ContinueOnError)
@@ -252,7 +254,7 @@ func fixSlicesFlags(fs *pflag.FlagSet) {
 func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan result.Issue, error) {
 	e.cfg.Run.Args = args
 
-	enabledLinters, err := e.EnabledLintersSet.Get()
+	enabledLinters, err := e.EnabledLintersSet.Get(true)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +370,7 @@ func (e *Executor) createPrinter() (printers.Printer, error) {
 	return p, nil
 }
 
-func (e *Executor) executeRun(cmd *cobra.Command, args []string) {
+func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 	needTrackResources := e.cfg.Run.IsVerbose || e.cfg.Run.PrintResourcesUsage
 	trackResourcesEndCh := make(chan struct{})
 	defer func() { // XXX: this defer must be before ctx.cancel defer
@@ -412,10 +414,10 @@ func (e *Executor) setupExitCode(ctx context.Context) {
 	}
 }
 
-func watchResources(ctx context.Context, done chan struct{}, log logutils.Log) {
+func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log) {
 	startedAt := time.Now()
 
-	rssValues := []uint64{}
+	var rssValues []uint64
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
@@ -448,8 +450,8 @@ func watchResources(ctx context.Context, done chan struct{}, log logutils.Log) {
 
 	const MB = 1024 * 1024
 	maxMB := float64(max) / MB
-	log.Infof("Memory: %d samples, avg is %.1fMB, max is %.1fMB",
+	logger.Infof("Memory: %d samples, avg is %.1fMB, max is %.1fMB",
 		len(rssValues), float64(avg)/MB, maxMB)
-	log.Infof("Execution took %s", time.Since(startedAt))
+	logger.Infof("Execution took %s", time.Since(startedAt))
 	close(done)
 }

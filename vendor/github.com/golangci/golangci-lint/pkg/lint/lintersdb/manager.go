@@ -8,12 +8,12 @@ import (
 )
 
 type Manager struct {
-	nameToLC map[string]linter.Config
+	nameToLC map[string]*linter.Config
 }
 
 func NewManager() *Manager {
 	m := &Manager{}
-	nameToLC := make(map[string]linter.Config)
+	nameToLC := make(map[string]*linter.Config)
 	for _, lc := range m.GetAllSupportedLinterConfigs() {
 		for _, name := range lc.AllNames() {
 			nameToLC[name] = lc
@@ -37,32 +37,50 @@ func (m Manager) allPresetsSet() map[string]bool {
 	return ret
 }
 
+func (m Manager) GetMetaLinter(name string) linter.MetaLinter {
+	return m.GetMetaLinters()[name]
+}
+
 func (m Manager) GetLinterConfig(name string) *linter.Config {
 	lc, ok := m.nameToLC[name]
 	if !ok {
 		return nil
 	}
 
-	return &lc
+	return lc
 }
 
-func enableLinterConfigs(lcs []linter.Config, isEnabled func(lc *linter.Config) bool) []linter.Config {
-	var ret []linter.Config
+func enableLinterConfigs(lcs []*linter.Config, isEnabled func(lc *linter.Config) bool) []*linter.Config {
+	var ret []*linter.Config
 	for _, lc := range lcs {
 		lc := lc
-		lc.EnabledByDefault = isEnabled(&lc)
+		lc.EnabledByDefault = isEnabled(lc)
 		ret = append(ret, lc)
 	}
 
 	return ret
 }
 
-func (Manager) GetAllSupportedLinterConfigs() []linter.Config {
-	lcs := []linter.Config{
+func (Manager) GetMetaLinters() map[string]linter.MetaLinter {
+	metaLinters := []linter.MetaLinter{
+		golinters.MegacheckMetalinter{},
+	}
+
+	ret := map[string]linter.MetaLinter{}
+	for _, metaLinter := range metaLinters {
+		ret[metaLinter.Name()] = metaLinter
+	}
+
+	return ret
+}
+
+func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
+	lcs := []*linter.Config{
 		linter.NewConfig(golinters.Govet{}).
 			WithTypeInfo().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(4).
+			WithAlternativeNames("vet", "vetshadow").
 			WithURL("https://golang.org/cmd/vet/"),
 		linter.NewConfig(golinters.Errcheck{}).
 			WithTypeInfo().
@@ -74,21 +92,26 @@ func (Manager) GetAllSupportedLinterConfigs() []linter.Config {
 			WithSpeed(3).
 			WithURL("https://github.com/golang/lint"),
 
-		linter.NewConfig(golinters.Megacheck{StaticcheckEnabled: true}).
+		linter.NewConfig(golinters.NewStaticcheck()).
 			WithSSA().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(2).
 			WithURL("https://staticcheck.io/"),
-		linter.NewConfig(golinters.Megacheck{UnusedEnabled: true}).
+		linter.NewConfig(golinters.NewUnused()).
 			WithSSA().
 			WithPresets(linter.PresetUnused).
 			WithSpeed(5).
 			WithURL("https://github.com/dominikh/go-tools/tree/master/cmd/unused"),
-		linter.NewConfig(golinters.Megacheck{GosimpleEnabled: true}).
+		linter.NewConfig(golinters.NewGosimple()).
 			WithSSA().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(5).
 			WithURL("https://github.com/dominikh/go-tools/tree/master/cmd/gosimple"),
+		linter.NewConfig(golinters.NewStylecheck()).
+			WithSSA().
+			WithPresets(linter.PresetStyle).
+			WithSpeed(5).
+			WithURL("https://github.com/dominikh/go-tools/tree/master/stylecheck"),
 
 		linter.NewConfig(golinters.Gosec{}).
 			WithTypeInfo().
@@ -156,11 +179,6 @@ func (Manager) GetAllSupportedLinterConfigs() []linter.Config {
 			WithPresets(linter.PresetPerformance).
 			WithSpeed(10).
 			WithURL("https://github.com/mdempsky/maligned"),
-		linter.NewConfig(golinters.Megacheck{GosimpleEnabled: true, UnusedEnabled: true, StaticcheckEnabled: true}).
-			WithSSA().
-			WithPresets(linter.PresetStyle, linter.PresetBugs, linter.PresetUnused).
-			WithSpeed(1).
-			WithURL("https://github.com/dominikh/go-tools/tree/master/cmd/megacheck"),
 		linter.NewConfig(golinters.Depguard{}).
 			WithTypeInfo().
 			WithPresets(linter.PresetStyle).
@@ -207,27 +225,27 @@ func (Manager) GetAllSupportedLinterConfigs() []linter.Config {
 	}
 
 	isLocalRun := os.Getenv("GOLANGCI_COM_RUN") == ""
-	enabled := map[string]bool{
-		golinters.Govet{}.Name():                             true,
-		golinters.Errcheck{}.Name():                          true,
-		golinters.Megacheck{StaticcheckEnabled: true}.Name(): true,
-		golinters.Megacheck{UnusedEnabled: true}.Name():      true,
-		golinters.Megacheck{GosimpleEnabled: true}.Name():    true,
-		golinters.Structcheck{}.Name():                       true,
-		golinters.Varcheck{}.Name():                          true,
-		golinters.Ineffassign{}.Name():                       true,
-		golinters.Deadcode{}.Name():                          true,
+	enabledByDefault := map[string]bool{
+		golinters.Govet{}.Name():       true,
+		golinters.Errcheck{}.Name():    true,
+		golinters.Staticcheck{}.Name(): true,
+		golinters.Unused{}.Name():      true,
+		golinters.Gosimple{}.Name():    true,
+		golinters.Structcheck{}.Name(): true,
+		golinters.Varcheck{}.Name():    true,
+		golinters.Ineffassign{}.Name(): true,
+		golinters.Deadcode{}.Name():    true,
 
 		// don't typecheck for golangci.com: too many troubles
 		golinters.TypeCheck{}.Name(): isLocalRun,
 	}
 	return enableLinterConfigs(lcs, func(lc *linter.Config) bool {
-		return enabled[lc.Name()]
+		return enabledByDefault[lc.Name()]
 	})
 }
 
-func (m Manager) GetAllEnabledByDefaultLinters() []linter.Config {
-	var ret []linter.Config
+func (m Manager) GetAllEnabledByDefaultLinters() []*linter.Config {
+	var ret []*linter.Config
 	for _, lc := range m.GetAllSupportedLinterConfigs() {
 		if lc.EnabledByDefault {
 			ret = append(ret, lc)
@@ -237,18 +255,18 @@ func (m Manager) GetAllEnabledByDefaultLinters() []linter.Config {
 	return ret
 }
 
-func linterConfigsToMap(lcs []linter.Config) map[string]*linter.Config {
+func linterConfigsToMap(lcs []*linter.Config) map[string]*linter.Config {
 	ret := map[string]*linter.Config{}
 	for _, lc := range lcs {
 		lc := lc // local copy
-		ret[lc.Name()] = &lc
+		ret[lc.Name()] = lc
 	}
 
 	return ret
 }
 
-func (m Manager) GetAllLinterConfigsForPreset(p string) []linter.Config {
-	ret := []linter.Config{}
+func (m Manager) GetAllLinterConfigsForPreset(p string) []*linter.Config {
+	var ret []*linter.Config
 	for _, lc := range m.GetAllSupportedLinterConfigs() {
 		for _, ip := range lc.InPresets {
 			if p == ip {
