@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golangci/tools/go/ssa"
-	"github.com/golangci/tools/go/ssa/ssautil"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/ssa/ssautil"
 
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/exitcodes"
@@ -126,12 +126,12 @@ func (cl ContextLoader) makeFakeLoaderProgram(pkgs []*packages.Package) *loader.
 	}
 }
 
-func (cl ContextLoader) buildSSAProgram(pkgs []*packages.Package, name string) *ssa.Program {
+func (cl ContextLoader) buildSSAProgram(pkgs []*packages.Package) *ssa.Program {
 	startedAt := time.Now()
 	var pkgsBuiltDuration time.Duration
 	defer func() {
-		cl.log.Infof("SSA %srepr building timing: packages building %s, total %s",
-			name, pkgsBuiltDuration, time.Since(startedAt))
+		cl.log.Infof("SSA repr building timing: packages building %s, total %s",
+			pkgsBuiltDuration, time.Since(startedAt))
 	}()
 
 	ssaProg, _ := ssautil.Packages(pkgs, ssa.GlobalDebug)
@@ -140,7 +140,7 @@ func (cl ContextLoader) buildSSAProgram(pkgs []*packages.Package, name string) *
 	return ssaProg
 }
 
-func (cl ContextLoader) findLoadMode(linters []linter.Config) packages.LoadMode {
+func (cl ContextLoader) findLoadMode(linters []*linter.Config) packages.LoadMode {
 	maxLoadMode := packages.LoadFiles
 	for _, lc := range linters {
 		curLoadMode := packages.LoadFiles
@@ -316,7 +316,7 @@ func (cl ContextLoader) filterPackages(pkgs []*packages.Package) []*packages.Pac
 }
 
 //nolint:gocyclo
-func (cl ContextLoader) Load(ctx context.Context, linters []linter.Config) (*linter.Context, error) {
+func (cl ContextLoader) Load(ctx context.Context, linters []*linter.Config) (*linter.Context, error) {
 	loadMode := cl.findLoadMode(linters)
 	pkgs, err := cl.loadPackages(ctx, loadMode)
 	if err != nil {
@@ -332,10 +332,9 @@ func (cl ContextLoader) Load(ctx context.Context, linters []linter.Config) (*lin
 		prog = cl.makeFakeLoaderProgram(pkgs)
 	}
 
-	var ssaProg, megacheckSSAProg *ssa.Program
+	var ssaProg *ssa.Program
 	if loadMode == packages.LoadAllSyntax {
-		ssaProg = cl.buildSSAProgram(pkgs, "")
-		megacheckSSAProg = cl.buildSSAProgram(pkgs, "for megacheck ")
+		ssaProg = cl.buildSSAProgram(pkgs)
 	}
 
 	astLog := cl.log.Child("astcache")
@@ -345,10 +344,9 @@ func (cl ContextLoader) Load(ctx context.Context, linters []linter.Config) (*lin
 	}
 
 	ret := &linter.Context{
-		Packages:            pkgs,
-		Program:             prog,
-		SSAProgram:          ssaProg,
-		MegacheckSSAProgram: megacheckSSAProg,
+		Packages:   pkgs,
+		Program:    prog,
+		SSAProgram: ssaProg,
 		LoaderConfig: &loader.Config{
 			Cwd:   "",  // used by depguard and fallbacked to os.Getcwd
 			Build: nil, // used by depguard and megacheck and fallbacked to build.Default

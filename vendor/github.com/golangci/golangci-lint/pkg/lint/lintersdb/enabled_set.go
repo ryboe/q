@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/golangci/golangci-lint/pkg/config"
-	"github.com/golangci/golangci-lint/pkg/golinters"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 )
@@ -26,7 +25,7 @@ func NewEnabledSet(m *Manager, v *Validator, log logutils.Log, cfg *config.Confi
 }
 
 // nolint:gocyclo
-func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []linter.Config) map[string]*linter.Config {
+func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []*linter.Config) map[string]*linter.Config {
 	resultLintersSet := map[string]*linter.Config{}
 	switch {
 	case len(lcfg.Presets) != 0:
@@ -43,7 +42,7 @@ func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []linte
 	for _, p := range lcfg.Presets {
 		for _, lc := range es.m.GetAllLinterConfigsForPreset(p) {
 			lc := lc
-			resultLintersSet[lc.Name()] = &lc
+			resultLintersSet[lc.Name()] = lc
 		}
 	}
 
@@ -58,17 +57,29 @@ func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []linte
 		}
 	}
 
+	metaLinters := es.m.GetMetaLinters()
+
 	for _, name := range lcfg.Enable {
+		if metaLinter := metaLinters[name]; metaLinter != nil {
+			// e.g. if we use --enable=megacheck we should add staticcheck,unused and gosimple to result set
+			for _, childLinter := range metaLinter.DefaultChildLinterNames() {
+				resultLintersSet[childLinter] = es.m.GetLinterConfig(childLinter)
+			}
+			continue
+		}
+
 		lc := es.m.GetLinterConfig(name)
 		// it's important to use lc.Name() nor name because name can be alias
 		resultLintersSet[lc.Name()] = lc
 	}
 
 	for _, name := range lcfg.Disable {
-		if name == "megacheck" {
-			for _, ln := range getAllMegacheckSubLinterNames() {
-				delete(resultLintersSet, ln)
+		if metaLinter := metaLinters[name]; metaLinter != nil {
+			// e.g. if we use --disable=megacheck we should remove staticcheck,unused and gosimple from result set
+			for _, childLinter := range metaLinter.DefaultChildLinterNames() {
+				delete(resultLintersSet, childLinter)
 			}
+			continue
 		}
 
 		lc := es.m.GetLinterConfig(name)
@@ -76,68 +87,54 @@ func (es EnabledSet) build(lcfg *config.Linters, enabledByDefaultLinters []linte
 		delete(resultLintersSet, lc.Name())
 	}
 
-	es.optimizeLintersSet(resultLintersSet)
 	return resultLintersSet
 }
 
-func getAllMegacheckSubLinterNames() []string {
-	unusedName := golinters.Megacheck{UnusedEnabled: true}.Name()
-	gosimpleName := golinters.Megacheck{GosimpleEnabled: true}.Name()
-	staticcheckName := golinters.Megacheck{StaticcheckEnabled: true}.Name()
-	return []string{unusedName, gosimpleName, staticcheckName}
-}
-
 func (es EnabledSet) optimizeLintersSet(linters map[string]*linter.Config) {
-	unusedName := golinters.Megacheck{UnusedEnabled: true}.Name()
-	gosimpleName := golinters.Megacheck{GosimpleEnabled: true}.Name()
-	staticcheckName := golinters.Megacheck{StaticcheckEnabled: true}.Name()
-	fullName := golinters.Megacheck{GosimpleEnabled: true, UnusedEnabled: true, StaticcheckEnabled: true}.Name()
-	allNames := []string{unusedName, gosimpleName, staticcheckName, fullName}
-
-	megacheckCount := 0
-	for _, n := range allNames {
-		if linters[n] != nil {
-			megacheckCount++
+	for _, metaLinter := range es.m.GetMetaLinters() {
+		var children []string
+		for _, child := range metaLinter.AllChildLinterNames() {
+			if _, ok := linters[child]; ok {
+				children = append(children, child)
+			}
 		}
-	}
 
-	if megacheckCount <= 1 {
-		return
-	}
+		if len(children) <= 1 {
+			continue
+		}
 
-	isFullEnabled := linters[fullName] != nil
-	mega := golinters.Megacheck{
-		UnusedEnabled:      isFullEnabled || linters[unusedName] != nil,
-		GosimpleEnabled:    isFullEnabled || linters[gosimpleName] != nil,
-		StaticcheckEnabled: isFullEnabled || linters[staticcheckName] != nil,
+		for _, child := range children {
+			delete(linters, child)
+		}
+		builtLinterConfig, err := metaLinter.BuildLinterConfig(children)
+		if err != nil {
+			panic("shouldn't fail during linter building: " + err.Error())
+		}
+		linters[metaLinter.Name()] = builtLinterConfig
+		es.log.Infof("Optimized sublinters %s into metalinter %s", children, metaLinter.Name())
 	}
-
-	for _, n := range allNames {
-		delete(linters, n)
-	}
-
-	lc := *es.m.GetLinterConfig("megacheck")
-	lc.Linter = mega
-	linters[mega.Name()] = &lc
 }
 
-func (es EnabledSet) Get() ([]linter.Config, error) {
+func (es EnabledSet) Get(optimize bool) ([]*linter.Config, error) {
 	if err := es.v.validateEnabledDisabledLintersConfig(&es.cfg.Linters); err != nil {
 		return nil, err
 	}
 
 	resultLintersSet := es.build(&es.cfg.Linters, es.m.GetAllEnabledByDefaultLinters())
-
-	var resultLinters []linter.Config
-	for _, lc := range resultLintersSet {
-		resultLinters = append(resultLinters, *lc)
+	es.verbosePrintLintersStatus(resultLintersSet)
+	if optimize {
+		es.optimizeLintersSet(resultLintersSet)
 	}
 
-	es.verbosePrintLintersStatus(resultLinters)
+	var resultLinters []*linter.Config
+	for _, lc := range resultLintersSet {
+		resultLinters = append(resultLinters, lc)
+	}
+
 	return resultLinters, nil
 }
 
-func (es EnabledSet) verbosePrintLintersStatus(lcs []linter.Config) {
+func (es EnabledSet) verbosePrintLintersStatus(lcs map[string]*linter.Config) {
 	var linterNames []string
 	for _, lc := range lcs {
 		linterNames = append(linterNames, lc.Name())
