@@ -1,29 +1,35 @@
 version: 2.1
+
+executors:
+  go-container:
+    docker:
+      - image: golang:1.11
+    environment:
+      GO111MODULE: 'on'
+    working_directory: /go/src/github.com/y0ssar1an/q
+
 jobs:
   lint:
-    docker:
-      - image: golang:1.11
-    environment:
-      GO111MODULE: 'on'
-    working_directory: /go/src/github.com/y0ssar1an/q
-    steps:
-      - checkout
-      - run: go install -mod vendor github.com/y0ssar1an/q/vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
-      - run: golangci-lint run
-  test:
-    docker:
-      - image: golang:1.11
-    environment:
-      GO111MODULE: 'on'
-    working_directory: /go/src/github.com/y0ssar1an/q
+    executor:
+      name: go-container
     steps:
       - checkout
       - restore_cache:
           keys:
-            - pkg-cache
+            - go-pkgs-{{ checksum "go.sum" }}
+      - run: go install -mod vendor github.com/y0ssar1an/q/vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
+      - run: golangci-lint run
+  test:
+    executor:
+      name: go-container
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-pkgs-{{ checksum "go.sum" }}
       - run: go test -mod vendor -v -race ./...
-      - save_cache: # cache the /go/pkg directory
-          key: pkg-cache
+      - save_cache:  # cache the /go/pkg directory
+          key: go-pkgs-{{ checksum "go.sum" }}
           paths:
             - '/go/pkg'
 
