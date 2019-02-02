@@ -70,6 +70,18 @@ rmqq() {
 
 You also can simply `tail -f $TMPDIR/q`, but it's highly recommended to use the above commands.
 
+If you add a symbolic link to the package via
+```sh
+ln -s $GOPATH/src/github.com/y0ssar1an/q/ $GOPATH/src/q
+```
+
+you can import the package via
+```go
+import (
+	"q"
+)
+```
+
 ## Editor Integration
 
 #### VS Code
