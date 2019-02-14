@@ -5,7 +5,6 @@
 package q
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -74,7 +73,6 @@ func TestHeader(t *testing.T) {
 
 	for _, tc := range testCases {
 		l := &logger{
-			buf:      &bytes.Buffer{},
 			lastFile: tc.lastFile,
 			lastFunc: tc.lastFunc,
 		}
@@ -117,11 +115,10 @@ func TestOutput(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		buf := &bytes.Buffer{}
-		l := logger{buf: buf, start: time.Now().UTC()}
+		l := logger{start: time.Now().UTC()}
 		l.output(tc.args...)
 
-		got := buf.String()
+		got := l.buf.String()
 		if got != tc.want {
 			argString := strings.Join(tc.args, ", ")
 			t.Fatalf("\nlogger.output(%s)\ngot:  %swant: %s", argString, got, tc.want)
