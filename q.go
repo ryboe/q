@@ -11,7 +11,7 @@ import (
 // nolint: gochecknoglobals
 var (
 	// std is the singleton logger.
-	std = &logger{}
+	std logger
 )
 
 // Q pretty-prints the given arguments to the $TMPDIR/q log file.
