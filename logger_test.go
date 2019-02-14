@@ -72,7 +72,7 @@ func TestHeader(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		l := &logger{
+		l := logger{
 			lastFile: tc.lastFile,
 			lastFunc: tc.lastFunc,
 		}
