@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"go/ast"
 	"testing"
-
-	"github.com/kr/pretty"
 )
 
 // TestExtractingArgsFromSourceText verifies that exprToString() and argName()
@@ -601,7 +599,7 @@ func TestIsQCall(t *testing.T) {
 			t.Fatalf(
 				"\nTEST %d\nisQCall(%s)\ngot:  %v\nwant: %v",
 				tc.id,
-				pretty.Sprint(tc.expr),
+				Sprint(tc.expr),
 				got,
 				tc.want,
 			)
