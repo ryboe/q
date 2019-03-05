@@ -8,7 +8,6 @@ import (
 type formatter struct {
 	v     reflect.Value
 	force bool
-	quote bool
 }
 
 func (fo formatter) String() string {

@@ -12,3 +12,9 @@ Your PR is more likely to be accepted if you open an issue first.
 ## Submission Checklist
 
 - [ ] `golangci-lint run` succeeds
+
+### Tools 
+To setup golangci-lint 
+```
+go get -v github.com/golangci/golangci-lint/cmd/golangci-lint
+```
