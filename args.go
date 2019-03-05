@@ -14,8 +14,6 @@ import (
 	"runtime"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/kr/pretty"
 )
 
 // argName returns the source text of the given argument if it's a variable or
@@ -127,7 +125,7 @@ func exprToString(arg ast.Expr) string {
 func formatArgs(args ...interface{}) []string {
 	formatted := make([]string, 0, len(args))
 	for _, a := range args {
-		s := colorize(pretty.Sprint(a), cyan)
+		s := colorize(Sprint(a), cyan)
 		formatted = append(formatted, s)
 	}
 	return formatted
