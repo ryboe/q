@@ -30,12 +30,12 @@ const (
 // logger writes pretty logs to the $TMPDIR/q file. It takes care of opening and
 // closing the file. It is safe for concurrent use.
 type logger struct {
-	mu        sync.Mutex    // protects all the other fields
-	buf       *bytes.Buffer // collects writes before they're flushed to the log file
-	start     time.Time     // time of first write in the current log group
-	lastWrite time.Time     // last time buffer was flushed. determines when to print header
-	lastFile  string        // last file to call q.Q(). determines when to print header
-	lastFunc  string        // last function to call q.Q(). determines when to print header
+	mu        sync.Mutex   // protects all the other fields
+	buf       bytes.Buffer // collects writes before they're flushed to the log file
+	start     time.Time    // time of first write in the current log group
+	lastWrite time.Time    // last time buffer was flushed. determines when to print header
+	lastFile  string       // last file to call q.Q(). determines when to print header
+	lastFunc  string       // last function to call q.Q(). determines when to print header
 }
 
 // header returns a formatted header string, e.g. [14:00:36 main.go main.main:122]
@@ -84,7 +84,7 @@ func (l *logger) flush() (err error) {
 		l.lastWrite = time.Now()
 	}()
 
-	_, err = io.Copy(f, l.buf)
+	_, err = io.Copy(f, &l.buf)
 	l.buf.Reset()
 	if err != nil {
 		return fmt.Errorf("failed to flush q buffer: %v", err)
@@ -101,7 +101,7 @@ func (l *logger) output(args ...string) {
 	timestamp = colorize(timestamp, yellow)
 
 	// preWidth is the length of everything before the log message.
-	fmt.Fprint(l.buf, timestamp, " ")
+	fmt.Fprint(&l.buf, timestamp, " ")
 
 	// Subsequent lines have to be indented by the width of the timestamp.
 	indent := strings.Repeat(" ", timestampWidth)
@@ -119,17 +119,17 @@ func (l *logger) output(args ...string) {
 		// Break up long lines. If this is first arg printed on the line
 		// (lineArgs == 0), it makes no sense to break up the line.
 		if lineWidth > maxLineWidth && lineArgs != 0 {
-			fmt.Fprint(l.buf, "\n", indent)
+			fmt.Fprint(&l.buf, "\n", indent)
 			lineArgs = 0
 			lineWidth = timestampWidth + argWidth
 			padding = ""
 		}
-		fmt.Fprint(l.buf, padding, arg)
+		fmt.Fprint(&l.buf, padding, arg)
 		lineArgs++
 		padding = " "
 	}
 
-	fmt.Fprint(l.buf, "\n")
+	fmt.Fprint(&l.buf, "\n")
 }
 
 // shortFile takes an absolute file path and returns just the <directory>/<file>,

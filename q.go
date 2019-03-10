@@ -5,16 +5,13 @@
 package q
 
 import (
-	"bytes"
 	"fmt"
 )
 
 // nolint: gochecknoglobals
 var (
 	// std is the singleton logger.
-	std = &logger{
-		buf: &bytes.Buffer{},
-	}
+	std logger
 )
 
 // Q pretty-prints the given arguments to the $TMPDIR/q log file.
@@ -41,7 +38,7 @@ func Q(v ...interface{}) {
 	// A header line looks like this: [14:00:36 main.go main.main:122].
 	header := std.header(funcName, file, line)
 	if header != "" {
-		fmt.Fprint(std.buf, "\n", header, "\n")
+		fmt.Fprint(&std.buf, "\n", header, "\n")
 	}
 
 	// q.Q(foo, bar, baz) -> []string{"foo", "bar", "baz"}
