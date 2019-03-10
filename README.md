@@ -24,18 +24,12 @@ import "github.com/y0ssar1an/q"
 ...
 q.Q(a, b, c)
 ```
-```go
-// Alternatively, use the . import and you can omit the package name.
-import . "github.com/y0ssar1an/q"
-...
-Q(a, b, c)
-```
 
 For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 
 ## Install
 ```sh
-go get -u github.com/y0ssar1an/q
+GO111MODULE=off go get github.com/y0ssar1an/q
 ```
 
 Put these functions in your shell config. Typing `qq` or `rmqq` will then start

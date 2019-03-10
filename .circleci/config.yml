@@ -3,7 +3,7 @@ version: 2.1
 executors:
   go-container:
     docker:
-      - image: golang:1.11
+      - image: golang:1.12
     environment:
       GO111MODULE: 'on'
       GOFLAGS: '-mod=vendor'
@@ -18,7 +18,7 @@ jobs:
       - restore_cache:
           keys:
             - go-pkgs-{{ checksum "go.sum" }}
-      - run: go install github.com/y0ssar1an/q/vendor/github.com/golangci/golangci-lint/cmd/golangci-lint
+      - run: GO111MODULE=off go get github.com/golangci/golangci-lint/cmd/golangci-lint
       - run: golangci-lint run
   test:
     executor:
