@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.12
+      image: golang:1.12-alpine
       env:
         GO111MODULE: 'on'
         GOFLAGS: '-mod=vendor'
