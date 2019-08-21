@@ -1,0 +1,30 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Download and install the linter
+      run: |
+        curl -L https://github.com/golangci/golangci-lint/releases/download/v1.17.1/golangci-lint-1.17.1-linux-amd64.tar.gz | tar xzf - -C /tmp
+        sudo mv /tmp/golangci-lint-1.17.1-linux-amd64/golangci-lint /usr/local/bin/golangci-lint
+    - name: Run the linter
+      run: golangci-lint run
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.12
+      env:
+        GO111MODULE: 'on'
+        GOFLAGS: '-mod=vendor'
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Run tests with the race detector
+      run: go test -v -race ./...
