@@ -5,20 +5,16 @@ executors:
     docker:
       - image: golang:1.13
     environment:
-      GO111MODULE: "on"
-      GOFLAGS: "-mod=vendor"
+      GO111MODULE: 'on'
+      GOFLAGS: '-mod=vendor'
     working_directory: /go/src/github.com/y0ssar1an/q
 
 jobs:
   lint:
-    executor:
-      name: go-container
+    docker:
+      - image: golangci/golangci-lint:v1.21-alpine
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - go-pkgs-{{ checksum "go.sum" }}
-      - run: GO111MODULE=off go get github.com/golangci/golangci-lint/cmd/golangci-lint
       - run: golangci-lint run
   test:
     executor:
@@ -32,7 +28,7 @@ jobs:
       - save_cache: # cache the /go/pkg directory
           key: go-pkgs-{{ checksum "go.sum" }}
           paths:
-            - "/go/pkg"
+            - '/go/pkg'
 
 workflows:
   build_and_test:

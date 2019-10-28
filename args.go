@@ -23,6 +23,7 @@ import (
 // returns an empty string.
 func argName(arg ast.Expr) string {
 	name := ""
+
 	switch a := arg.(type) {
 	case *ast.Ident:
 		switch {
@@ -42,6 +43,7 @@ func argName(arg ast.Expr) string {
 		*ast.UnaryExpr:
 		name = exprToString(arg)
 	}
+
 	return name
 }
 

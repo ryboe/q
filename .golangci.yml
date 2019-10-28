@@ -1,12 +1,13 @@
 run:
-  deadline: 1m
   modules-download-mode: vendor
   tests: true
+  timeout: 1m
 
 linters:
   enable-all: true
   disable:
     - scopelint
+    - wsl
 
 linters-settings:
   gocyclo:

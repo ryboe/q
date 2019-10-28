@@ -14,6 +14,7 @@ import (
 
 // TestHeader verifies that logger.header() returns a header line with the
 // expected filename, function name, and line number.
+// nolint: funlen
 func TestHeader(t *testing.T) {
 	testCases := []struct {
 		lastFile, lastFunc string
@@ -86,15 +87,18 @@ func TestHeader(t *testing.T) {
 			if h == "" {
 				continue
 			}
+
 			t.Fatalf("\nl.header(%s, %s, %d)\ngot:  %q\nwant: %q", tc.currFunc, tc.lastFile, line, h, "")
 		}
 
 		if !strings.Contains(h, tc.currFunc) {
 			t.Fatalf("\nl.header(%s, %s, %d)\ngot:  %q\nmissing current function name", tc.currFunc, tc.currFile, line, h)
 		}
+
 		if !strings.Contains(h, tc.currFile) {
 			t.Fatalf("\nl.header(%s, %s, %d)\ngot:  %q\nmissing current file name", tc.currFunc, tc.currFile, line, h)
 		}
+
 		if !strings.Contains(h, strconv.Itoa(line)) {
 			t.Fatalf("\nl.header(%s, %s, %d)\ngot:  %q\nmissing line number", tc.currFunc, tc.currFile, line, h)
 		}
