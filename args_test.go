@@ -15,6 +15,7 @@ import (
 // TestExtractingArgsFromSourceText verifies that exprToString() and argName()
 // arg able to extract the text of the arguments passed to q.Q(). For example,
 // q.Q(myVar) should return "myVar".
+// nolint: funlen
 func TestExtractingArgsFromSourceText(t *testing.T) {
 	testCases := []struct {
 		id   int
@@ -539,6 +540,7 @@ func TestPrependArgName(t *testing.T) {
 
 // TestIsQCall verifies that isQCall() returns true if the given call expression
 // is q.Q().
+// nolint: funlen
 func TestIsQCall(t *testing.T) {
 	testCases := []struct {
 		id   int
