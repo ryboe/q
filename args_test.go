@@ -349,6 +349,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 	}
 
 	// We can test both exprToString() and argName() with the test cases above.
+	// nolint: scopelint
 	for _, tc := range testCases {
 		// test exprToString()
 		testName := fmt.Sprintf("exprToString(%T)", tc.arg)

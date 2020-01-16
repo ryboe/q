@@ -6,13 +6,13 @@ executors:
       - image: golang:1.13
     environment:
       GO111MODULE: 'on'
-      GOFLAGS: '-mod=vendor'
+      GOFLAGS: -mod=vendor
     working_directory: /go/src/github.com/y0ssar1an/q
 
 jobs:
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.21-alpine
+      - image: golangci/golangci-lint:v1.22-alpine
     steps:
       - checkout
       - run: golangci-lint run
@@ -28,7 +28,7 @@ jobs:
       - save_cache: # cache the /go/pkg directory
           key: go-pkgs-{{ checksum "go.sum" }}
           paths:
-            - '/go/pkg'
+            - /go/pkg
 
 workflows:
   build_and_test:

@@ -6,7 +6,7 @@ run:
 linters:
   enable-all: true
   disable:
-    - scopelint
+    - gomnd
     - wsl
 
 linters-settings:
