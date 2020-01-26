@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   lint:
     container:
-      image: golangci/golangci-lint:v1.22-alpine
+      image: golangci/golangci-lint:v1.23-alpine
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
