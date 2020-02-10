@@ -1,4 +1,4 @@
-module github.com/savalin/q
+module github.com/y0ssar1an/q
 
 go 1.13
 
