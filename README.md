@@ -29,7 +29,7 @@ For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 
 ## Install
 ```sh
-GO111MODULE=off go get github.com/y0ssar1an/q
+go get -u github.com/y0ssar1an/q
 ```
 
 Put these functions in your shell config. Typing `qq` or `rmqq` will then start

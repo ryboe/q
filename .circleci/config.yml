@@ -3,11 +3,8 @@ version: 2.1
 executors:
   go-container:
     docker:
-      - image: golang:1.13
-    environment:
-      GO111MODULE: 'on'
-      GOFLAGS: -mod=vendor
-    working_directory: /go/src/github.com/y0ssar1an/q
+      - image: golang:1.14
+    working_directory: /go/src/q
 
 jobs:
   lint:

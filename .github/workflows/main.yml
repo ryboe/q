@@ -17,10 +17,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.13
-      env:
-        GO111MODULE: 'on'
-        GOFLAGS: -mod=vendor
+      image: golang:1.14
     steps:
       - name: Checkout repo
         uses: actions/checkout@v1
