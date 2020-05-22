@@ -6,7 +6,7 @@ fmt.Printf("%#v", whatever). The output will be colorized and nicely formatted.
 The output goes to $TMPDIR/q, away from the noise of stdout.
 
 q exports a single Q() function. This is how you use it:
-    import "github.com/y0ssar1an/q"
+    import "q"
     ...
     q.Q(a, b, c)
 */
