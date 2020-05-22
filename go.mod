@@ -1,5 +1,8 @@
-module github.com/y0ssar1an/q
+module github.com/ryboe/q
 
 go 1.14
 
-require github.com/kr/pretty v0.2.0
+require (
+	github.com/kr/pretty v0.2.0
+	github.com/kr/text v0.2.0 // indirect
+)

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/y0ssar1an/q"
+import "q"
 
 func main() {
 	a := 123
