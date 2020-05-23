@@ -75,7 +75,7 @@ func (l *logger) flush() (err error) {
 	path := filepath.Join(os.TempDir(), "q")
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		return fmt.Errorf("failed to open %q: %v", path, err)
+		return fmt.Errorf("failed to open %q: %w", path, err)
 	}
 	defer func() {
 		if cerr := f.Close(); err == nil {
@@ -87,7 +87,7 @@ func (l *logger) flush() (err error) {
 	_, err = io.Copy(f, &l.buf)
 	l.buf.Reset()
 	if err != nil {
-		return fmt.Errorf("failed to flush q buffer: %v", err)
+		return fmt.Errorf("failed to flush q buffer: %w", err)
 	}
 
 	return nil
