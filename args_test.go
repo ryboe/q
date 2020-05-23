@@ -429,7 +429,7 @@ func TestArgWidth(t *testing.T) {
 	}
 }
 
-// TestFormatArgs verifies that formatArgs() produces the expected
+// TestFormatArgs verifies that formatArgs() produces the expected string.
 func TestFormatArgs(t *testing.T) {
 	testCases := []struct {
 		id   int

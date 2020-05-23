@@ -7,6 +7,8 @@ linters:
   enable-all: true
   disable:
     - gomnd
+    - testpackage
+    - nolintlint
     - wsl
 
 linters-settings:
