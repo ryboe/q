@@ -1,3 +1,3 @@
 module "github.com/kr/text"
 
-require "github.com/creack/pty" v1.1.9
+require "github.com/kr/pty" v1.1.1
