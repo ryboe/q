@@ -1,8 +1,8 @@
 # q
 
 [![CircleCI](https://circleci.com/gh/ryboe/q/tree/master.svg?style=svg)](https://circleci.com/gh/ryboe/q/tree/master)
-[![GoDoc](https://godoc.org/github.com/ryboe/q?status.svg)](https://godoc.org/github.com/ryboe/q)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ryboe/q)](https://goreportcard.com/report/github.com/ryboe/q)
+[![PkgGoDev](https://pkg.go.dev/github.com/ryboe/q)](https://pkg.go.dev/github.com/ryboe/q)
 
 q is a better way to do print statement debugging.
 
