@@ -18,7 +18,7 @@ import (
 type color string
 
 const (
-	// ANSI color escape codes
+	// ANSI color escape codes.
 	bold     color = "\033[1m"
 	yellow   color = "\033[33m"
 	cyan     color = "\033[36m"
@@ -137,5 +137,6 @@ func (l *logger) output(args ...string) {
 func shortFile(file string) string {
 	dir := filepath.Base(filepath.Dir(file))
 	file = filepath.Base(file)
+
 	return filepath.Join(dir, file)
 }

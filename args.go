@@ -81,6 +81,7 @@ func argNames(filename string, line int) ([]string, error) {
 		for _, arg := range call.Args {
 			names = append(names, argName(arg))
 		}
+
 		return true
 	})
 
@@ -103,6 +104,7 @@ func argWidth(arg string) int {
 		string(endColor), "",
 	)
 	s := replacer.Replace(arg)
+
 	return utf8.RuneCountInString(s)
 }
 
@@ -132,6 +134,7 @@ func formatArgs(args ...interface{}) []string {
 		s := colorize(pretty.Sprint(a), cyan)
 		formatted = append(formatted, s)
 	}
+
 	return formatted
 }
 
@@ -149,6 +152,7 @@ func getCallerInfo() (funcName, file string, line int, err error) {
 	}
 
 	funcName = runtime.FuncForPC(pc).Name()
+
 	return funcName, file, line, nil
 }
 
@@ -164,11 +168,13 @@ func prependArgName(names, values []string) []string {
 		}
 		if name == "" {
 			prepended[i] = value
+
 			continue
 		}
 		name = colorize(name, bold)
 		prepended[i] = fmt.Sprintf("%s=%s", name, value)
 	}
+
 	return prepended
 }
 
@@ -183,6 +189,7 @@ func isQFunction(n *ast.CallExpr) bool {
 	if !is {
 		return false
 	}
+
 	return ident.Name == "Q"
 }
 
