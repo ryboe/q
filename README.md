@@ -70,6 +70,7 @@ You also can simply `tail -f $TMPDIR/q`, but it's highly recommended to use the 
 ## Editor Integration
 
 ### VS Code
+
 `Preferences > User Snippets > Go`
 
 ```json

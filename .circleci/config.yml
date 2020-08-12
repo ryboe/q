@@ -3,7 +3,7 @@ version: 2.1
 executors:
   go-container:
     docker:
-      - image: golang:1.14
+      - image: golang:1.15
     working_directory: /go/src/q
 
 jobs:
