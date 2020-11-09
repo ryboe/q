@@ -13,6 +13,14 @@ linters:
     - wsl
 
 linters-settings:
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - whyNoLint
   gocyclo:
     min-complexity: 11
   gofmt:
