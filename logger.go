@@ -114,7 +114,7 @@ func (l *logger) output(args ...string) {
 
 		// Some names in name=value strings contain newlines. Insert indentation
 		// after each newline so they line up.
-		arg = strings.Replace(arg, "\n", "\n"+indent, -1)
+		arg = strings.ReplaceAll(arg, "\n", "\n"+indent)
 
 		// Break up long lines. If this is first arg printed on the line
 		// (lineArgs == 0), it makes no sense to break up the line.
