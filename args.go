@@ -60,7 +60,7 @@ func argNames(filename string, line int) ([]string, error) {
 	}
 
 	var names []string
-	ast.Inspect(f, func(n ast.Node) bool { // nolint: unparam
+	ast.Inspect(f, func(n ast.Node) bool {
 		call, is := n.(*ast.CallExpr)
 		if !is {
 			// The node is not a function call.
