@@ -124,7 +124,7 @@ func exprToString(arg ast.Expr) string {
 
 	// CallExpr will be multi-line and indented with tabs. replace tabs with
 	// spaces so we can better control formatting during output().
-	return strings.Replace(buf.String(), "\t", "    ", -1)
+	return strings.ReplaceAll(buf.String(), "\t", "    ")
 }
 
 // formatArgs converts the given args to pretty-printed, colorized strings.
