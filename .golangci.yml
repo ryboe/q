@@ -8,8 +8,9 @@ linters:
   disable:
     - exhaustivestruct
     - gomnd
-    - testpackage
     - nolintlint
+    - paralleltest # tests only take 2.5s to run. no need to parallelize
+    - testpackage
     - wsl
 
 linters-settings:
@@ -22,6 +23,6 @@ linters-settings:
     disabled-checks:
       - whyNoLint
   gocyclo:
-    min-complexity: 11
+    min-complexity: 10
   gofmt:
     simplify: true
