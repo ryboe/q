@@ -353,6 +353,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 	for _, tc := range testCases {
 		// test exprToString()
 		testName := fmt.Sprintf("exprToString(%T)", tc.arg)
+		// nolint: thelper
 		t.Run(testName, func(t *testing.T) {
 			if _, ok := tc.arg.(*ast.Ident); ok {
 				return
@@ -365,6 +366,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 
 		// test argName()
 		testName = fmt.Sprintf("argName(%T)", tc.arg)
+		// nolint: thelper
 		t.Run(testName, func(t *testing.T) {
 			if got := argName(tc.arg); got != tc.want {
 				t.Fatalf("\ngot:  %s\nwant: %s", got, tc.want)
