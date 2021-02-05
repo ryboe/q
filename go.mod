@@ -1,5 +1,5 @@
 module github.com/ryboe/q
 
-go 1.15
+go 1.16
 
 require github.com/kr/pretty v0.2.1
