@@ -8,9 +8,13 @@ linters:
   disable:
     - exhaustivestruct
     - forbidigo # we need to use fmt.Print*()
+    - interfacer # deprecated
+    - golint # deprecated
     - gomnd
+    - maligned # deprecated
     - nolintlint
     - paralleltest # tests only take 2.5s to run. no need to parallelize
+    - scopelint # deprecated
     - testpackage
     - wsl
 
