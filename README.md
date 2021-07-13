@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/ryboe/q/tree/master.svg?style=svg)](https://circleci.com/gh/ryboe/q/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ryboe/q)](https://goreportcard.com/report/github.com/ryboe/q)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/ryboe/q)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/ryboe/q)](https://pkg.go.dev/github.com/ryboe/q)
 
 q is a better way to do print statement debugging.
