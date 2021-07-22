@@ -32,7 +32,7 @@ For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 ## Install
 
 ```sh
-git clone https://github.com/ryboe/q $GOPATH/src/q
+git clone https://github.com/ryboe/q "$(go env GOPATH)"/src/q
 ```
 
 Put these functions in your shell config. Typing `qq` or `rmqq` will then start
