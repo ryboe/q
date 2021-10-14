@@ -132,9 +132,16 @@ contain:
 q.Q(${1:...}) // DEBUG
 ```
 
-### vim
+### Vim/NeoVim
 
-TBD Send me a PR, please :)
+For [SirVer/ultisnips](https://github.com/SirVer/ultisnips), use `:UltiSnipsEdit` to add the new snippet:
+
+```snippets
+snippet qq "qq"
+q.Q(${1:})
+${2}
+endsnippet
+```
 
 ## Haven't I seen this somewhere before?
 
