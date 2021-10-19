@@ -1,7 +1,9 @@
 # github.com/kr/pretty v0.3.0
-## explicit
+## explicit; go 1.12
 github.com/kr/pretty
 # github.com/kr/text v0.2.0
+## explicit
 github.com/kr/text
 # github.com/rogpeppe/go-internal v1.6.1
+## explicit; go 1.11
 github.com/rogpeppe/go-internal/fmtsort
