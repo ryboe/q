@@ -3,13 +3,13 @@ version: 2.1
 executors:
   go-container:
     docker:
-      - image: golang:1.16
+      - image: golang:1.17
     working_directory: /go/src/q
 
 jobs:
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.41-alpine
+      - image: golangci/golangci-lint:v1.42-alpine
     steps:
       - checkout
       - run: golangci-lint run
