@@ -15,7 +15,7 @@ import (
 // TestExtractingArgsFromSourceText verifies that exprToString() and argName()
 // arg able to extract the text of the arguments passed to q.Q(). For example,
 // q.Q(myVar) should return "myVar".
-// nolint: funlen
+// nolint: funlen,maintidx
 func TestExtractingArgsFromSourceText(t *testing.T) {
 	testCases := []struct {
 		id   int
