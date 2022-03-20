@@ -1,6 +1,6 @@
 module github.com/ryboe/q
 
-go 1.17
+go 1.18
 
 require github.com/kr/pretty v0.3.0
 

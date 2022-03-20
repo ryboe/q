@@ -16,6 +16,7 @@ linters:
     - paralleltest # tests only take 2.5s to run. no need to parallelize
     - scopelint # deprecated
     - testpackage
+    - varnamelen # makes bad suggestions
     - wsl
 
 linters-settings:
