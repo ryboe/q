@@ -7,12 +7,14 @@ linters:
   enable-all: true
   disable:
     - exhaustivestruct
+    - exhaustruct
     - forbidigo # we need to use fmt.Print*()
-    - interfacer # deprecated
     - golint # deprecated
     - gomnd
+    - interfacer # deprecated
     - maligned # deprecated
     - nolintlint
+    - nonamedreturns
     - paralleltest # tests only take 2.5s to run. no need to parallelize
     - scopelint # deprecated
     - testpackage
