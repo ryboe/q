@@ -1,15 +1,23 @@
-FROM ryboe/archcodespace:latest
+ARG GO_VERSION
+FROM golang:${GO_VERSION}-alpine AS goimage
+
+FROM mcr.microsoft.com/vscode/devcontainers/base:alpine
+
+COPY --from=goimage /usr/local/go/ /usr/local/go/
+
+# dlv needs these packages.
+RUN apk add --no-cache gcc musl-dev
+
+USER vscode
 
 ENV GOPATH="/home/vscode/go"
-ENV PATH="$GOPATH/bin:$PATH"
+ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 
-RUN sudo pacman -Syu --noconfirm go
-
-RUN go install github.com/cweill/gotests/gotests@latest \
-    && go install github.com/fatih/gomodifytags@latest \
-    && go install github.com/josharian/impl@latest \
-    && go install github.com/haya14busa/goplay/cmd/goplay@latest \
-    && go install github.com/go-delve/delve/cmd/dlv@latest \
-    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest \
-    && go install golang.org/x/tools/gopls@latest \
-    && go install mvdan.cc/gofumpt@latest
+RUN go install github.com/haya14busa/goplay/cmd/goplay@latest
+RUN go install github.com/josharian/impl@latest
+RUN go install github.com/fatih/gomodifytags@latest
+RUN go install github.com/cweill/gotests/gotests@latest
+RUN go install mvdan.cc/gofumpt@latest
+RUN go install golang.org/x/tools/gopls@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest

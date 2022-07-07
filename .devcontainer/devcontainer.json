@@ -13,8 +13,14 @@
 		"seccomp=unconfined"
 	],
 	"settings": {
+		"[dockerfile]": {
+			"editor.defaultFormatter": "ms-azuretools.vscode-docker"
+		},
+		"editor.formatOnSave": true,
+		"files.insertFinalNewline": true,
+		"files.trimFinalNewlines": true,
+		"files.trimTrailingWhitespace": true,
 		"go.lintTool": "golangci-lint",
-		"go.path": "/home/vscode/go",
 		"go.toolsManagement.autoUpdate": true,
 		"gopls": {
 			"formatting.gofumpt": true,
@@ -24,12 +30,8 @@
 	"extensions": [
 		"davidanson.vscode-markdownlint",
 		"eamodio.gitlens",
-		"earshinov.permute-lines",
-		"github.copilot",
-		"github.vscode-pull-request-github",
 		"golang.go",
-		"ms-vsliveshare.vsliveshare",
+		"ms-azuretools.vscode-docker",
 		"redhat.vscode-yaml",
-		"sleistner.vscode-fileutils",
 	],
 }
