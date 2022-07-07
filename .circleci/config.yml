@@ -3,7 +3,7 @@ version: 2.1
 executors:
   go-container:
     docker:
-      - image: golang:1.18
+      - image: golang:1.18-alpine
     working_directory: /go/src/q
 
 jobs:
@@ -21,6 +21,7 @@ jobs:
       - restore_cache:
           keys:
             - go-pkgs-{{ checksum "go.sum" }}
+      - run: apk add gcc musl-dev
       - run: go test -v -race ./...
       - save_cache: # cache the /go/pkg directory
           key: go-pkgs-{{ checksum "go.sum" }}
