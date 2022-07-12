@@ -1,8 +1,6 @@
-name: "PR"
+name: PR
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     types: [opened, reopened, synchronize]
 

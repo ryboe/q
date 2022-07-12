@@ -1,6 +1,5 @@
 # q
 
-[![CI Status](https://github.com/ryboe/q/actions/workflows/pr.yml/badge.svg?branch=master)](https://github.com/ryboe/q/actions?query=branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ryboe/q)](https://goreportcard.com/report/github.com/ryboe/q)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/ryboe/q)](https://pkg.go.dev/github.com/ryboe/q)
 
