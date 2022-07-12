@@ -32,5 +32,5 @@ linters-settings:
       - whyNoLint
   gocyclo:
     min-complexity: 10
-  gofmt:
-    simplify: true
+  gofumpt:
+    extra-rules: true
