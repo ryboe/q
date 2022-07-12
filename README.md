@@ -1,6 +1,6 @@
 # q
 
-[![CircleCI](https://circleci.com/gh/ryboe/q/tree/master.svg?style=svg)](https://circleci.com/gh/ryboe/q/tree/master)
+![Actions](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ryboe/q)](https://goreportcard.com/report/github.com/ryboe/q)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/ryboe/q)](https://pkg.go.dev/github.com/ryboe/q)
 
