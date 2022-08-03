@@ -3,8 +3,8 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"GO_VERSION": "1.18",
-		},
+			"GO_VERSION": "1.19"
+		}
 	},
 	// dlv needs these capabilities. It needs to run the ptrace (process trace)
 	// syscall, and we need to disable the default seccomp profile applied to
@@ -35,6 +35,6 @@
 		"eamodio.gitlens",
 		"golang.go",
 		"ms-azuretools.vscode-docker",
-		"redhat.vscode-yaml",
-	],
+		"redhat.vscode-yaml"
+	]
 }
