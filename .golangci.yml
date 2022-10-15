@@ -6,18 +6,23 @@ run:
 linters:
   enable-all: true
   disable:
+    - deadcode # deprecated
     - exhaustivestruct
     - exhaustruct
     - forbidigo # we need to use fmt.Print*()
     - golint # deprecated
     - gomnd
+    - ifshort # deprecated
     - interfacer # deprecated
     - maligned # deprecated
     - nolintlint
     - nonamedreturns
+    - nosnakecase # deprecated
     - paralleltest # tests only take 2.5s to run. no need to parallelize
     - scopelint # deprecated
+    - structcheck # deprecated
     - testpackage
+    - varcheck # deprecated
     - varnamelen # makes bad suggestions
     - wsl
 
