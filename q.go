@@ -12,6 +12,18 @@ import (
 var (
 	// std is the singleton logger.
 	std logger
+
+	// CallDepth allows setting the number of levels runtime.Caller will
+	// skip when looking up the caller of the q.Q function. This allows
+	// the `q` package to be wrapped by a project-specific wrapping function,
+	// which would increase the depth by at least one. It's better to not
+	// include calls to `q.Q` in released code at all and scrub them before,
+	// a build is created, but in some cases it might be useful to provide
+	// builds that do include the additional debug output provided by `q.Q`.
+	// This also allows the consumer of the package to control what happens
+	// with leftover `q.Q` calls. Defaults to 2, because the user code calls
+	// q.Q(), which calls getCallerInfo().
+	CallDepth = 2
 )
 
 // Q pretty-prints the given arguments to the $TMPDIR/q log file.
