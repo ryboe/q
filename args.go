@@ -141,8 +141,7 @@ func formatArgs(args ...interface{}) []string {
 // getCallerInfo returns the name, file, and line number of the function calling
 // q.Q().
 func getCallerInfo() (funcName, file string, line int, err error) {
-	const callDepth = 2 // user code calls q.Q() which calls std.log().
-	pc, file, line, ok := runtime.Caller(callDepth)
+	pc, file, line, ok := runtime.Caller(CallDepth)
 	if !ok {
 		// This error is not exported. It is only used internally in the q
 		// package. The error message isn't even used by the caller. So, I've
