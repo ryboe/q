@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   schedule:
     - cron: 37 11 * * 2
 
@@ -26,7 +26,7 @@ jobs:
         with:
           languages: go
 
-    # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
+      # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
 
