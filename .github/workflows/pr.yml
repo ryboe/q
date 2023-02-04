@@ -11,16 +11,16 @@ jobs:
     container: golangci/golangci-lint:v1.50-alpine
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Run linter
-      run: golangci-lint run
+      - name: Run linter
+        run: golangci-lint run
 
   tests:
     name: Run unit tests with the race detector enabled
     runs-on: ubuntu-latest
-    container: golang:1.19-alpine
+    container: golang:1.20-alpine
 
     steps:
       - name: Checkout repository
