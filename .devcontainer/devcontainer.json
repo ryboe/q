@@ -17,6 +17,7 @@
 					"editor.defaultFormatter": "ms-azuretools.vscode-docker"
 				},
 				"editor.formatOnSave": true,
+				"extensions.verifySignature": false, // remove when bug is fixed: https://github.com/microsoft/vscode/issues/179827#event-9050112350
 				"files.insertFinalNewline": true,
 				"files.trimFinalNewlines": true,
 				"files.trimTrailingWhitespace": true,
@@ -24,7 +25,8 @@
 				"go.toolsManagement.autoUpdate": true,
 				"gopls": {
 					"formatting.gofumpt": true,
-					"ui.completion.usePlaceholders": true
+					"ui.completion.usePlaceholders": true,
+					"ui.semanticTokens": true
 				}
 			},
 			"extensions": [
