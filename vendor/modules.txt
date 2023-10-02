@@ -4,6 +4,6 @@ github.com/kr/pretty
 # github.com/kr/text v0.2.0
 ## explicit
 github.com/kr/text
-# github.com/rogpeppe/go-internal v1.9.0
-## explicit; go 1.17
+# github.com/rogpeppe/go-internal v1.11.0
+## explicit; go 1.19
 github.com/rogpeppe/go-internal/fmtsort

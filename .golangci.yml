@@ -7,6 +7,7 @@ linters:
   enable-all: true
   disable:
     - deadcode # deprecated
+    - depguard # enforces that only deps on a whitelist can be used (meant for orgs, not small projects)
     - exhaustivestruct
     - exhaustruct
     - forbidigo # we need to use fmt.Print*()

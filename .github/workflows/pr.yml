@@ -8,7 +8,7 @@ jobs:
   lint:
     name: GolangCI Lint
     runs-on: ubuntu-latest
-    container: golangci/golangci-lint:v1.50-alpine
+    container: golangci/golangci-lint:v1.54-alpine
 
     steps:
       - name: Checkout repository
@@ -20,7 +20,7 @@ jobs:
   tests:
     name: Run unit tests with the race detector enabled
     runs-on: ubuntu-latest
-    container: golang:1.20-alpine
+    container: golang:1.21-alpine
 
     steps:
       - name: Checkout repository
