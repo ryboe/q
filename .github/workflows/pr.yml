@@ -8,28 +8,25 @@ jobs:
   lint:
     name: GolangCI Lint
     runs-on: ubuntu-latest
-    container: golangci/golangci-lint:v1.54-alpine
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Set up go
+        uses: actions/setup-go@v4
       - name: Run linter
-        run: golangci-lint run
+        uses: golangci/golangci-lint-action@v3
 
   tests:
     name: Run unit tests with the race detector enabled
     runs-on: ubuntu-latest
-    container: golang:1.21-alpine
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
-      - name: Install GCC and C libraries required by the race detector
-        run: apk add --update gcc musl-dev
-
+      - name: Set up go
+        uses: actions/setup-go@v4
       - name: Run unit tests
         run: go test -v -race ./...

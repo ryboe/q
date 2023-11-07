@@ -1,15 +1,16 @@
 {
-    "[dockerfile]": {
-        "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-    },
     "editor.formatOnSave": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
+    "go.diagnostic.vulncheck": "Imports",
     "go.lintTool": "golangci-lint",
     "go.toolsManagement.autoUpdate": true,
     "gopls": {
         "formatting.gofumpt": true,
+        "ui.codelenses": {
+            "run_govulncheck": true
+        },
         "ui.completion.usePlaceholders": true,
         "ui.diagnostic.analyses": {
             "fieldalignment": true,
