@@ -3,7 +3,6 @@
         "davidanson.vscode-markdownlint",
         "eamodio.gitlens",
         "golang.go",
-        "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
     ]
 }
