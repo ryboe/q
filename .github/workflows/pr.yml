@@ -14,9 +14,9 @@ jobs:
         with:
           fetch-depth: 1
       - name: Set up go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
       - name: Run linter
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
 
   tests:
     name: Run unit tests with the race detector enabled
@@ -27,6 +27,6 @@ jobs:
         with:
           fetch-depth: 1
       - name: Set up go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
       - name: Run unit tests
         run: go test -v -race ./...
