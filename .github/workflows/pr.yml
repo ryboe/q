@@ -15,6 +15,8 @@ jobs:
           fetch-depth: 1
       - name: Set up go
         uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - name: Run linter
         uses: golangci/golangci-lint-action@v4
 
@@ -28,5 +30,7 @@ jobs:
           fetch-depth: 1
       - name: Set up go
         uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - name: Run unit tests
         run: go test -v -race ./...
