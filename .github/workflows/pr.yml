@@ -18,7 +18,9 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Run linter
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
 
   tests:
     name: Run unit tests with the race detector enabled

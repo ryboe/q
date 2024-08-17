@@ -1,8 +1,7 @@
 {
     "recommendations": [
         "davidanson.vscode-markdownlint",
-        "eamodio.gitlens",
         "golang.go",
-        "redhat.vscode-yaml",
+        "redhat.vscode-yaml"
     ]
 }

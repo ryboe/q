@@ -6,24 +6,15 @@ run:
 linters:
   enable-all: true
   disable:
-    - deadcode # deprecated
     - depguard # enforces that only deps on a whitelist can be used (meant for orgs, not small projects)
-    - exhaustivestruct
+    - execinquery # deprecated
     - exhaustruct
     - forbidigo # we need to use fmt.Print*()
-    - golint # deprecated
     - gomnd
-    - ifshort # deprecated
-    - interfacer # deprecated
-    - maligned # deprecated
     - nolintlint
     - nonamedreturns
-    - nosnakecase # deprecated
     - paralleltest # tests only take 2.5s to run. no need to parallelize
-    - scopelint # deprecated
-    - structcheck # deprecated
     - testpackage
-    - varcheck # deprecated
     - varnamelen # makes bad suggestions
     - wsl
 
