@@ -389,7 +389,7 @@ func TestArgNames(t *testing.T) {
 		t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
 	}
 
-	for i := 0; i < len(got); i++ {
+	for i := range got {
 		if got[i] != want[i] {
 			t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
 		}
@@ -481,7 +481,7 @@ func TestFormatArgs(t *testing.T) {
 			t.Fatalf("\nTEST %d\ngot:  %s\nwant: %s", tc.id, got, tc.want)
 		}
 
-		for i := 0; i < len(got); i++ {
+		for i := range got {
 			if got[i] != tc.want[i] {
 				t.Fatalf("\nTEST %d\ngot:  %s\nwant: %s", tc.id, got, tc.want)
 			}
@@ -531,7 +531,7 @@ func TestPrependArgName(t *testing.T) {
 			t.Fatalf("\nprependArgName(%v, %v)\ngot:  %v\nwant: %v", tc.names, tc.values, got, tc.want)
 		}
 
-		for i := 0; i < len(got); i++ {
+		for i := range got {
 			if got[i] != tc.want[i] {
 				t.Fatalf("\nprependArgName(%v, %v)\ngot:  %v\nwant: %v", tc.names, tc.values, got, tc.want)
 			}
