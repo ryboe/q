@@ -6,33 +6,52 @@ on:
 
 jobs:
   lint:
-    name: GolangCI Lint
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Set up go
-        uses: actions/setup-go@v5
+      - name: set up go
+        uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
-      - name: Run linter
+      - name: lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
 
-  tests:
-    name: Run unit tests with the race detector enabled
+  check:
+    name: go vet
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Set up go
-        uses: actions/setup-go@v5
+      - name: set up go
+        uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
-      - name: Run unit tests
+      - name: run go vet
+        run: go vet ./...
+      - name: run staticcheck
+        uses: dominikh/staticcheck-action@v1
+        with:
+          version: latest
+
+  tests:
+    name: run unit tests with the race detector enabled
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: set up go
+        uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version-file: go.mod
+      - name: run unit tests
         run: go test -v -race ./...

@@ -9,11 +9,14 @@ linters:
     - depguard # enforces that only deps on a whitelist can be used (meant for orgs, not small projects)
     - execinquery # deprecated
     - exhaustruct
+    - exportloopref # deprecated
     - forbidigo # we need to use fmt.Print*()
     - gomnd
-    - nolintlint
-    - nonamedreturns
+    - govet # we run the official go vet separately
+    - nolintlint # we do occasionally need to suppress linter false positives
+    - nonamedreturns # named returns often help readability
     - paralleltest # tests only take 2.5s to run. no need to parallelize
+    - staticcheck # dominickh doesn't recommend running staticcheck as part of golangci-lint, so we run Real Staticcheck™ separately
     - testpackage
     - varnamelen # makes bad suggestions
     - wsl
