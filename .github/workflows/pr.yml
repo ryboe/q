@@ -23,7 +23,7 @@ jobs:
           version: latest
 
   check:
-    name: go vet
+    name: go vet and staticcheck
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
@@ -42,7 +42,7 @@ jobs:
           version: latest
 
   tests:
-    name: run unit tests with the race detector enabled
+    name: unit tests with race detector enabled
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
