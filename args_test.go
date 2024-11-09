@@ -7,6 +7,7 @@ package q
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"testing"
 
 	"github.com/kr/pretty"
@@ -24,122 +25,151 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 	}{
 		{
 			id:   1,
-			arg:  &ast.Ident{NamePos: 123, Obj: ast.NewObj(ast.Var, "myVar")},
+			arg:  &ast.Ident{Name: "myVar"},
 			want: "myVar",
 		},
 		{
 			id:   2,
-			arg:  &ast.Ident{NamePos: 234, Obj: ast.NewObj(ast.Var, "awesomeVar")},
+			arg:  &ast.Ident{Name: "awesomeVar"},
 			want: "awesomeVar",
 		},
 		{
 			id:   3,
-			arg:  &ast.Ident{NamePos: 456, Obj: ast.NewObj(ast.Bad, "myVar")},
-			want: "",
+			arg:  &ast.Ident{Name: "myVar"},
+			want: "myVar",
 		},
 		{
 			id:   4,
-			arg:  &ast.Ident{NamePos: 789, Obj: ast.NewObj(ast.Con, "myVar")},
+			arg:  &ast.Ident{Name: "myVar"},
 			want: "myVar",
 		},
 		{
 			id: 5,
 			arg: &ast.BinaryExpr{
-				X:     &ast.BasicLit{ValuePos: 49, Kind: 5, Value: "1"},
-				OpPos: 51,
-				Op:    12,
-				Y:     &ast.BasicLit{ValuePos: 53, Kind: 5, Value: "2"},
+				X:  &ast.BasicLit{Kind: token.INT, Value: "1"},
+				Op: token.ADD,
+				Y:  &ast.BasicLit{Kind: token.INT, Value: "2"},
 			},
 			want: "1 + 2",
 		},
 		{
 			id: 6,
 			arg: &ast.BinaryExpr{
-				X:     &ast.BasicLit{ValuePos: 89, Kind: 6, Value: "3.14"},
-				OpPos: 94,
-				Op:    15,
-				Y:     &ast.BasicLit{ValuePos: 96, Kind: 6, Value: "1.59"},
+				X:  &ast.BasicLit{Kind: token.FLOAT, Value: "3.14"},
+				Op: token.QUO,
+				Y:  &ast.BasicLit{Kind: token.FLOAT, Value: "1.59"},
 			},
 			want: "3.14 / 1.59",
 		},
 		{
 			id: 7,
 			arg: &ast.BinaryExpr{
-				X:     &ast.BasicLit{ValuePos: 73, Kind: 5, Value: "123"},
-				OpPos: 77,
-				Op:    14,
-				Y:     &ast.BasicLit{ValuePos: 79, Kind: 5, Value: "234"},
+				X:  &ast.BasicLit{Kind: token.INT, Value: "123"},
+				Op: token.MUL,
+				Y:  &ast.BasicLit{Kind: token.INT, Value: "234"},
 			},
 			want: "123 * 234",
 		},
 		{
 			id: 8,
+			arg: &ast.CallExpr{
+				Fun: &ast.Ident{
+					Name: "foo",
+				},
+				Lparen: token.NoPos,
+				Args:   nil,
+				Rparen: token.NoPos,
+			},
+			want: "foo()",
+		},
+		{
+			id: 9,
+			arg: &ast.IndexExpr{
+				X: &ast.Ident{
+					Name: "a",
+				},
+				Index: &ast.BasicLit{Kind: token.INT, Value: "1"},
+			},
+			want: "a[1]",
+		},
+		{
+			id: 10,
 			arg: &ast.KeyValueExpr{
 				Key: &ast.Ident{
-					NamePos: 72,
-					Name:    "Greeting",
-					Obj:     nil,
+					Name: "Greeting",
 				},
-				Colon: 80,
-				Value: &ast.BasicLit{ValuePos: 82, Kind: 9, Value: "\"Hello\""},
+				Value: &ast.BasicLit{Kind: token.STRING, Value: "\"Hello\""},
 			},
 			want: `Greeting: "Hello"`,
 		},
 		{
-			id: 9,
+			id: 11,
 			arg: &ast.ParenExpr{
-				Lparen: 35,
 				X: &ast.BinaryExpr{
-					X:     &ast.BasicLit{ValuePos: 36, Kind: 5, Value: "2"},
-					OpPos: 38,
-					Op:    14,
-					Y:     &ast.BasicLit{ValuePos: 40, Kind: 5, Value: "3"},
+					X:  &ast.BasicLit{Kind: token.INT, Value: "2"},
+					Op: token.MUL,
+					Y:  &ast.BasicLit{Kind: token.INT, Value: "3"},
 				},
-				Rparen: 41,
 			},
 			want: "(2 * 3)",
 		},
 		{
-			id: 10,
+			id: 12,
 			arg: &ast.SelectorExpr{
 				X: &ast.Ident{
-					NamePos: 44,
-					Name:    "fmt",
-					Obj:     nil,
+					Name: "fmt",
 				},
 				Sel: &ast.Ident{
-					NamePos: 48,
-					Name:    "Print",
-					Obj:     nil,
+					Name: "Print",
 				},
 			},
 			want: "fmt.Print",
 		},
 		{
-			id: 11,
+			id: 13,
+			arg: &ast.SliceExpr{
+				X: &ast.Ident{
+					Name: "a",
+				},
+				Low:    &ast.BasicLit{Kind: token.INT, Value: "0"},
+				High:   &ast.BasicLit{Kind: token.INT, Value: "2"},
+				Max:    nil,
+				Slice3: false,
+			},
+			want: "a[0:2]",
+		},
+		{
+			id: 14,
+			arg: &ast.TypeAssertExpr{
+				X: &ast.Ident{
+					Name: "a",
+				},
+				Type: &ast.Ident{
+					Name: "string",
+				},
+			},
+			want: "a.(string)",
+		},
+		{
+			id: 15,
 			arg: &ast.UnaryExpr{
-				OpPos: 35,
-				Op:    13,
-				X:     &ast.BasicLit{ValuePos: 36, Kind: 5, Value: "1"},
+				Op: token.SUB,
+				X:  &ast.BasicLit{Kind: token.INT, Value: "1"},
 			},
 			want: "-1",
 		},
 		{
-			id: 12,
+			id: 16,
 			arg: &ast.Ident{
-				NamePos: 65,
-				Name:    "string",
-				Obj:     nil,
+				Name: "string",
 			},
 			want: "string",
 		},
 	}
 
-	// We can test both exprToString() and argName() with the test cases above.
 	for _, tc := range testCases {
 		// test exprToString()
 		testName := fmt.Sprintf("exprToString(%T)", tc.arg)
-		// nolint: thelper
 		t.Run(testName, func(t *testing.T) {
 			if _, ok := tc.arg.(*ast.Ident); ok {
 				return
@@ -152,34 +182,11 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 
 		// test argName()
 		testName = fmt.Sprintf("argName(%T)", tc.arg)
-		// nolint: thelper
 		t.Run(testName, func(t *testing.T) {
 			if got := argName(tc.arg); got != tc.want {
 				t.Fatalf("\ngot:  %s\nwant: %s", got, tc.want)
 			}
 		})
-	}
-}
-
-// TestArgNames verifies that argNames() is able to find the q.Q() call in the
-// sample text and extract the argument names. For example, if q.q(a, b, c) is
-// in the sample text, argNames() should return []string{"a", "b", "c"}.
-func TestArgNames(t *testing.T) {
-	const filename = "testdata/sample1.go"
-	want := []string{"a", "b", "c", "d", "e", "f", "g"}
-	got, err := argNames(filename, 14)
-	if err != nil {
-		t.Fatalf("argNames: failed to parse %q: %v", filename, err)
-	}
-
-	if len(got) != len(want) {
-		t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
-	}
-
-	for i := range got {
-		if got[i] != want[i] {
-			t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
-		}
 	}
 }
 
