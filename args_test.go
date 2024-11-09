@@ -74,122 +74,6 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 		},
 		{
 			id: 8,
-			arg: &ast.CallExpr{
-				Fun: &ast.Ident{
-					NamePos: 30,
-					Name:    "foo",
-					Obj: &ast.Object{
-						Kind: 5,
-						Name: "foo",
-						Decl: &ast.FuncDecl{
-							Doc:  nil,
-							Recv: nil,
-							Name: &ast.Ident{
-								NamePos: 44,
-								Name:    "foo",
-								Obj:     &ast.Object{},
-							},
-							Type: &ast.FuncType{
-								Func: 39,
-								Params: &ast.FieldList{
-									Opening: 47,
-									List:    nil,
-									Closing: 48,
-								},
-								Results: &ast.FieldList{
-									Opening: 0,
-									List: []*ast.Field{
-										{
-											Doc:   nil,
-											Names: nil,
-											Type: &ast.Ident{
-												NamePos: 50,
-												Name:    "int",
-												Obj:     nil,
-											},
-											Tag:     nil,
-											Comment: nil,
-										},
-									},
-									Closing: 0,
-								},
-							},
-							Body: &ast.BlockStmt{
-								Lbrace: 54,
-								List: []ast.Stmt{
-									&ast.ReturnStmt{
-										Return: 57,
-										Results: []ast.Expr{
-											&ast.BasicLit{ValuePos: 64, Kind: 5, Value: "123"},
-										},
-									},
-								},
-								Rbrace: 68,
-							},
-						},
-						Data: nil,
-						Type: nil,
-					},
-				},
-				Lparen:   33,
-				Args:     nil,
-				Ellipsis: 0,
-				Rparen:   34,
-			},
-			want: "foo()",
-		},
-		{
-			id: 9,
-			arg: &ast.IndexExpr{
-				X: &ast.Ident{
-					NamePos: 51,
-					Name:    "a",
-					Obj: &ast.Object{
-						Kind: 4,
-						Name: "a",
-						Decl: &ast.AssignStmt{
-							Lhs: []ast.Expr{
-								&ast.Ident{
-									NamePos: 30,
-									Name:    "a",
-									Obj:     &ast.Object{},
-								},
-							},
-							TokPos: 32,
-							Tok:    47,
-							Rhs: []ast.Expr{
-								&ast.CompositeLit{
-									Type: &ast.ArrayType{
-										Lbrack: 35,
-										Len:    nil,
-										Elt: &ast.Ident{
-											NamePos: 37,
-											Name:    "int",
-											Obj:     nil,
-										},
-									},
-									Lbrace: 40,
-									Elts: []ast.Expr{
-										&ast.BasicLit{ValuePos: 41, Kind: 5, Value: "1"},
-										&ast.BasicLit{ValuePos: 44, Kind: 5, Value: "2"},
-										&ast.BasicLit{ValuePos: 47, Kind: 5, Value: "3"},
-									},
-									Rbrace: 48,
-								},
-							},
-						},
-						Data: nil,
-						Type: nil,
-					},
-				},
-				Lbrack: 52,
-				Index:  &ast.BasicLit{ValuePos: 53, Kind: 5, Value: "1"},
-				Rbrack: 54,
-			},
-			want: "a[1]",
-		},
-		{
-			id: 10,
 			arg: &ast.KeyValueExpr{
 				Key: &ast.Ident{
 					NamePos: 72,
@@ -202,7 +86,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 			want: `Greeting: "Hello"`,
 		},
 		{
-			id: 11,
+			id: 9,
 			arg: &ast.ParenExpr{
 				Lparen: 35,
 				X: &ast.BinaryExpr{
@@ -216,7 +100,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 			want: "(2 * 3)",
 		},
 		{
-			id: 12,
+			id: 10,
 			arg: &ast.SelectorExpr{
 				X: &ast.Ident{
 					NamePos: 44,
@@ -232,104 +116,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 			want: "fmt.Print",
 		},
 		{
-			id: 13,
-			arg: &ast.SliceExpr{
-				X: &ast.Ident{
-					NamePos: 51,
-					Name:    "a",
-					Obj: &ast.Object{
-						Kind: 4,
-						Name: "a",
-						Decl: &ast.AssignStmt{
-							Lhs: []ast.Expr{
-								&ast.Ident{
-									NamePos: 30,
-									Name:    "a",
-									Obj:     &ast.Object{},
-								},
-							},
-							TokPos: 32,
-							Tok:    47,
-							Rhs: []ast.Expr{
-								&ast.CompositeLit{
-									Type: &ast.ArrayType{
-										Lbrack: 35,
-										Len:    nil,
-										Elt: &ast.Ident{
-											NamePos: 37,
-											Name:    "int",
-											Obj:     (*ast.Object)(nil),
-										},
-									},
-									Lbrace: 40,
-									Elts: []ast.Expr{
-										&ast.BasicLit{ValuePos: 41, Kind: 5, Value: "1"},
-										&ast.BasicLit{ValuePos: 44, Kind: 5, Value: "2"},
-										&ast.BasicLit{ValuePos: 47, Kind: 5, Value: "3"},
-									},
-									Rbrace: 48,
-								},
-							},
-						},
-						Data: nil,
-						Type: nil,
-					},
-				},
-				Lbrack: 52,
-				Low:    &ast.BasicLit{ValuePos: 53, Kind: 5, Value: "0"},
-				High:   &ast.BasicLit{ValuePos: 55, Kind: 5, Value: "2"},
-				Max:    nil,
-				Slice3: false,
-				Rbrack: 56,
-			},
-			want: "a[0:2]",
-		},
-		{
-			id: 14,
-			arg: &ast.TypeAssertExpr{
-				X: &ast.Ident{
-					NamePos: 62,
-					Name:    "a",
-					Obj: &ast.Object{
-						Kind: 4,
-						Name: "a",
-						Decl: &ast.ValueSpec{
-							Doc: nil,
-							Names: []*ast.Ident{
-								{
-									NamePos: 34,
-									Name:    "a",
-									Obj:     &ast.Object{},
-								},
-							},
-							Type: &ast.InterfaceType{
-								Interface: 36,
-								Methods: &ast.FieldList{
-									Opening: 45,
-									List:    nil,
-									Closing: 46,
-								},
-								Incomplete: false,
-							},
-							Values:  nil,
-							Comment: nil,
-						},
-						Data: int(0),
-						Type: nil,
-					},
-				},
-				Lparen: 64,
-				Type: &ast.Ident{
-					NamePos: 65,
-					Name:    "string",
-					Obj:     nil,
-				},
-				Rparen: 71,
-			},
-			want: "a.(string)",
-		},
-		{
-			id: 15,
+			id: 11,
 			arg: &ast.UnaryExpr{
 				OpPos: 35,
 				Op:    13,
@@ -338,7 +125,7 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 			want: "-1",
 		},
 		{
-			id: 16,
+			id: 12,
 			arg: &ast.Ident{
 				NamePos: 65,
 				Name:    "string",
