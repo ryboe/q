@@ -190,6 +190,28 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 	}
 }
 
+// TestArgNames verifies that argNames() is able to find the q.Q() call in the
+// sample text and extract the argument names. For example, if q.q(a, b, c) is
+// in the sample text, argNames() should return []string{"a", "b", "c"}.
+func TestArgNames(t *testing.T) {
+	const filename = "testdata/sample1.go"
+	want := []string{"a", "b", "c", "d", "e", "f", "g"}
+	got, err := argNames(filename, 14)
+	if err != nil {
+		t.Fatalf("argNames: failed to parse %q: %v", filename, err)
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
+	}
+
+	for i := range got {
+		if got[i] != want[i] {
+			t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
+		}
+	}
+}
+
 // TestArgNamesBadFilename verifies that argNames() returns an error if given an
 // invalid filename.
 func TestArgNamesBadFilename(t *testing.T) {
