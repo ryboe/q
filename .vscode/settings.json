@@ -13,7 +13,6 @@
         },
         "ui.completion.usePlaceholders": true,
         "ui.diagnostic.analyses": {
-            "fieldalignment": true,
             "nilness": true,
             "unusedparams": true,
             "unusedvariable": true,
