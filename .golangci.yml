@@ -1,34 +1,55 @@
+version: "2"
+
 run:
   modules-download-mode: vendor
   tests: true
-  timeout: 1m
 
 linters:
-  enable-all: true
+  default: all
   disable:
     - depguard # enforces that only deps on a whitelist can be used (meant for orgs, not small projects)
     - exhaustruct
     - forbidigo # we need to use fmt.Print*()
+    - gosmopolitan # we use chinese characters in a test
     - govet # we run the official go vet separately
     - nolintlint # we do occasionally need to suppress linter false positives
     - nonamedreturns # named returns often help readability
     - paralleltest # tests only take 2.5s to run. no need to parallelize
     - staticcheck # dominickh doesn't recommend running staticcheck as part of golangci-lint, so we run Real Staticcheck™ separately
-    - tenv # deprecated
     - testpackage
     - varnamelen # makes bad suggestions
     - wsl
+  settings:
+    gocritic:
+      disabled-checks:
+        - whyNoLint
+      enabled-tags:
+        - diagnostic
+        - opinionated
+        - performance
+        - style
+    gocyclo:
+      min-complexity: 10
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
-linters-settings:
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - whyNoLint
-  gocyclo:
-    min-complexity: 10
-  gofumpt:
-    extra-rules: true
+formatters:
+  enable:
+    - gofumpt
+  settings:
+    gofumpt:
+      extra-rules: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

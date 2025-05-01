@@ -4,6 +4,7 @@
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
     "go.diagnostic.vulncheck": "Imports",
+    "go.formatTool": "gofumpt",
     "go.lintTool": "golangci-lint",
     "go.toolsManagement.autoUpdate": true,
     "gopls": {

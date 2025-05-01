@@ -145,9 +145,9 @@ func getCallerInfo() (funcName, file string, line int, err error) {
 	if !ok {
 		// This error is not exported. It is only used internally in the q
 		// package. The error message isn't even used by the caller. So, I've
-		// suppressed the goerr113 linter here, which catches nonidiomatic
+		// suppressed the err113 linter here, which catches nonidiomatic
 		// error handling post Go 1.13 errors.
-		return "", "", 0, errors.New("failed to get info about the function calling q.Q") // nolint: goerr113
+		return "", "", 0, errors.New("failed to get info about the function calling q.Q") // nolint: err113
 	}
 
 	funcName = runtime.FuncForPC(pc).Name()
