@@ -12,6 +12,7 @@ linters:
     - forbidigo # we need to use fmt.Print*()
     - gosmopolitan # we use chinese characters in a test
     - govet # we run the official go vet separately
+    - noinlineerr # inline errors are fine
     - nolintlint # we do occasionally need to suppress linter false positives
     - nonamedreturns # named returns often help readability
     - paralleltest # tests only take 2.5s to run. no need to parallelize
@@ -19,6 +20,7 @@ linters:
     - testpackage
     - varnamelen # makes bad suggestions
     - wsl
+    - wsl_v5
   settings:
     gocritic:
       disabled-checks:
