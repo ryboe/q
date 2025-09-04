@@ -3,24 +3,18 @@
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
-    "go.diagnostic.vulncheck": "Imports",
-    "go.formatTool": "gofumpt",
-    "go.lintTool": "golangci-lint",
+    "go.diagnostic.vulncheck": "Imports", // check versions in go.mod for vulns. complements gopls.ui.codelenses.vulncheck
+    "go.lintTool": "golangci-lint-v2", // Go: Install/Update Tools installs v1 by default
+    "go.survey.prompt": false,
     "go.toolsManagement.autoUpdate": true,
     "gopls": {
-        "formatting.gofumpt": true,
+        "formatting.gofumpt": true, // set this instead of go.formatTool
         "ui.codelenses": {
-            "run_govulncheck": true
+            // run govulncheck to check Go code for use of vulnerable funcs. complements go.diagnostic.vulncheck
+            "vulncheck": true
         },
-        "ui.completion.usePlaceholders": true,
-        "ui.diagnostic.analyses": {
-            "nilness": true,
-            "unusedparams": true,
-            "unusedvariable": true,
-            "unusedwrite": true,
-            "useany": true
-        },
-        "ui.diagnostic.staticcheck": true,
-        "ui.semanticTokens": true
+        "ui.completion.usePlaceholders": true, // completion text will have placeholders that you can tab through
+        "ui.diagnostic.staticcheck": true, // enable all staticcheck checks
+        "ui.semanticTokens": true // more accurate syntax highlighting
     }
 }
