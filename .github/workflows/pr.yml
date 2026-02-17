@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - name: set up go
-        uses: WillAbides/setup-go-faster@v1
+        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
         with:
           go-version-file: go.mod
       - name: lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
 
@@ -27,11 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - name: set up go
-        uses: WillAbides/setup-go-faster@v1
+        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
         with:
           go-version-file: go.mod
       - name: run go vet
@@ -39,18 +39,21 @@ jobs:
       - name: run staticcheck
         uses: dominikh/staticcheck-action@v1
         with:
-          version: latest
+          # uses setup-go-faster by default, which is currently failing,
+          # so we disable automatic installation of Go and install Go
+          # ourselves with setup-go
+          install-go: false
 
-  tests:
+  test:
     name: unit tests with race detector enabled
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - name: set up go
-        uses: WillAbides/setup-go-faster@v1
+        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
         with:
           go-version-file: go.mod
       - name: run unit tests
