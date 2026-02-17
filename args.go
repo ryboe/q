@@ -128,7 +128,7 @@ func exprToString(arg ast.Expr) string {
 }
 
 // formatArgs converts the given args to pretty-printed, colorized strings.
-func formatArgs(args ...interface{}) []string {
+func formatArgs(args ...any) []string {
 	formatted := make([]string, 0, len(args))
 	for _, a := range args {
 		s := colorize(pretty.Sprint(a), cyan)
