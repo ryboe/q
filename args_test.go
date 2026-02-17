@@ -252,17 +252,17 @@ func TestArgWidth(t *testing.T) {
 func TestFormatArgs(t *testing.T) {
 	testCases := []struct {
 		id   int
-		args []interface{}
+		args []any
 		want []string
 	}{
 		{
 			id:   1,
-			args: []interface{}{123},
+			args: []any{123},
 			want: []string{colorize("int(123)", cyan)},
 		},
 		{
 			id:   2,
-			args: []interface{}{123, 3.14, "hello world"},
+			args: []any{123, 3.14, "hello world"},
 			want: []string{
 				colorize("int(123)", cyan),
 				colorize("float64(3.14)", cyan),
@@ -271,14 +271,14 @@ func TestFormatArgs(t *testing.T) {
 		},
 		{
 			id:   3,
-			args: []interface{}{[]string{"goodbye", "world"}},
+			args: []any{[]string{"goodbye", "world"}},
 			want: []string{
 				colorize(`[]string{"goodbye", "world"}`, cyan),
 			},
 		},
 		{
 			id: 4,
-			args: []interface{}{
+			args: []any{
 				[]struct{ a, b int }{
 					{1, 2}, {2, 3}, {3, 4},
 				},

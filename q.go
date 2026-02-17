@@ -27,7 +27,7 @@ var (
 )
 
 // Q pretty-prints the given arguments to the $TMPDIR/q log file.
-func Q(v ...interface{}) {
+func Q(v ...any) {
 	std.mu.Lock()
 	defer std.mu.Unlock()
 
