@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gun Game - Tactical Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        .screen {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Main Menu */
+        #mainMenu {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .menu-title {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Operator Selection */
+        #operatorSelect {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .select-title {
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .operators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .operator-card {
+            padding: 20px;
+            border: 3px solid #444;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            background: #2a2a3e;
+            transition: all 0.3s;
+        }
+
+        .operator-card:hover {
+            border-color: #ff6b6b;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .operator-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .operator-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .operator-skill {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .operator-card.selected {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        /* Game Screen */
+        #gameScreen {
+            flex-direction: column;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+            overflow: hidden;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 40px;
+        }
+
+        .game-canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+        }
+
+        /* Leaderboard */
+        #leaderboard {
+            flex-direction: column;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: white;
+            padding: 40px;
+        }
+
+        .leaderboard-title {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .leaderboard-table {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            width: 100%;
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            padding: 15px;
+            border-bottom: 1px solid #444;
+            gap: 20px;
+        }
+
+        .leaderboard-header {
+            font-weight: bold;
+            color: #ff6b6b;
+            text-transform: uppercase;
+        }
+
+        .leaderboard-entry {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            gap: 20px;
+            transition: all 0.2s;
+        }
+
+        .leaderboard-entry:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .leaderboard-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .leaderboard-score {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .leaderboard-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .menu-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+
+        .menu-btn-small {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: rgba(255, 107, 107, 0.8);
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .menu-btn-small:hover {
+            background: rgba(255, 107, 107, 1);
+            transform: translateY(-2px);
+        }
+
+        .enemies {
+            position: absolute;
+        }
+
+        .enemy {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ff4444;
+            border: 2px solid #cc0000;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            border: 2px solid #228B22;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .game-over-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            border: 3px solid #ff6b6b;
+        }
+
+        .game-over-modal.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-over-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .game-over-score {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            color: #ff6b6b;
+        }
+
+        .game-over-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Main Menu -->
+    <div id="mainMenu" class="screen active">
+        <h1 class="menu-title">🎯 GUN GAME</h1>
+        <div class="menu-buttons">
+            <button class="btn" onclick="startGame()">START GAME</button>
+            <button class="btn" onclick="showLeaderboard()">LEADERBOARD</button>
+        </div>
+    </div>
+
+    <!-- Operator Selection -->
+    <div id="operatorSelect" class="screen">
+        <h2 class="select-title">SELECT YOUR OPERATOR</h2>
+        <div class="operators-grid" id="operatorsGrid"></div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="game-header">
+            <div class="game-info">
+                <div>👤 <span id="operatorDisplay"></span></div>
+                <div>💥 Kills: <span id="killCount">0</span></div>
+                <div>❤️ Health: <span id="healthDisplay">100</span></div>
+            </div>
+            <div>Score: <span id="scoreDisplay">0</span></div>
+        </div>
+        <div class="game-canvas-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="menu-overlay">
+                <button class="menu-btn-small" onclick="pauseGame()">PAUSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard" class="screen">
+        <h2 class="leaderboard-title">🏆 LEADERBOARD</h2>
+        <div class="leaderboard-table">
+            <div class="leaderboard-row leaderboard-header">
+                <div>Rank</div>
+                <div>Player</div>
+                <div>Score</div>
+            </div>
+            <div id="leaderboardEntries"></div>
+        </div>
+        <div class="leaderboard-actions">
+            <button class="btn" onclick="clearLeaderboard()">CLEAR SCORES</button>
+            <button class="btn" onclick="showMenu()">BACK TO MENU</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="game-over-modal" id="gameOverModal">
+        <h2 class="game-over-title">GAME OVER</h2>
+        <div class="game-over-score">Final Score: <span id="finalScore">0</span></div>
+        <div class="game-over-buttons">
+            <button class="btn" onclick="backToMenu()">MENU</button>
+            <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Data
+        const operators = [
+            { name: 'Striker', icon: '⚡', skill: '+15% Fire Rate' },
+            { name: 'Tank', icon: '🛡️', skill: '+50 Health' },
+            { name: 'Sniper', icon: '🎯', skill: '+30% Damage' },
+            { name: 'Ghost', icon: '👻', skill: '+20% Speed' },
+            { name: 'Blaze', icon: '🔥', skill: 'Explosive Shots' },
+            { name: 'Viper', icon: '🐍', skill: 'Poison Bullets' }
+        ];
+
+        let selectedOperator = null;
+        let gameState = {
+            score: 0,
+            kills: 0,
+            health: 100,
+            isRunning: false,
+            isPaused: false,
+            playerX: 0,
+            playerY: 0,
+            enemies: [],
+            bullets: []
+        };
+
+        // Utilities
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMenu() {
+            showScreen('mainMenu');
+            gameState.isRunning = false;
+        }
+
+        // Operator Selection
+        function startGame() {
+            showScreen('operatorSelect');
+            renderOperators();
+        }
+
+        function renderOperators() {
+            const grid = document.getElementById('operatorsGrid');
+            grid.innerHTML = operators.map((op, idx) => `
+                <div class="operator-card" onclick="selectOperator(${idx})">
+                    <div class="operator-icon">${op.icon}</div>
+                    <div class="operator-name">${op.name}</div>
+                    <div class="operator-skill">${op.skill}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectOperator(idx) {
+            selectedOperator = operators[idx];
+            document.querySelectorAll('.operator-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === idx);
+            });
+            setTimeout(() => launchGame(), 300);
+        }
+
+        // Game Logic
+        function launchGame() {
+            gameState = {
+                score: 0,
+                kills: 0,
+                health: selectedOperator.name === 'Tank' ? 150 : 100,
+                isRunning: true,
+                isPaused: false,
+                playerX: 400,
+                playerY: 550,
+                enemies: [],
+                bullets: []
+            };
+
+            showScreen('gameScreen');
+            document.getElementById('operatorDisplay').textContent = selectedOperator.name;
+            setupGame();
+            gameLoop();
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (e.key === ' ') {
+                e.preventDefault();
+                shoot();
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            keys[e.key] = false;
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            gameState.playerX = e.clientX - rect.left;
+        });
+
+        function setupGame() {
+            spawnEnemies();
+        }
+
+        function shoot() {
+            if (!gameState.isRunning || gameState.isPaused) return;
+            gameState.bullets.push({
+                x: gameState.playerX,
+                y: gameState.playerY - 10,
+                vx: (Math.random() - 0.5) * 4,
+                vy: -8
+            });
+        }
+
+        function spawnEnemies() {
+            if (gameState.enemies.length < 3 + Math.floor(gameState.kills / 5)) {
+                gameState.enemies.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: Math.random() * 100,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: Math.random() * 2 + 1,
+                    health: 1
+                });
+            }
+        }
+
+        function updateGame() {
+            if (!gameState.isRunning || gameState.isPaused) return;
+
+            // Player movement
+            const moveSpeed = selectedOperator.name === 'Ghost' ? 8 : 5;
+            if (keys['ArrowLeft'] || keys['a']) gameState.playerX = Math.max(0, gameState.playerX - moveSpeed);
+            if (keys['ArrowRight'] || keys['d']) gameState.playerX = Math.min(canvas.width - 50, gameState.playerX + moveSpeed);
+
+            // Update bullets
+            gameState.bullets = gameState.bullets.filter(b => {
+                b.x += b.vx;
+                b.y += b.vy;
+                return b.y > 0;
+            });
+
+            // Update enemies
+            gameState.enemies.forEach(e => {
+                e.x += e.vx;
+                e.y += e.vy;
+                if (e.x < 0 || e.x > canvas.width - 40) e.vx *= -1;
+                if (e.y > canvas.height) {
+                    gameState.health -= 10;
+                }
+            });
+
+            // Collision detection
+            gameState.bullets.forEach((bullet, bidx) => {
+                gameState.enemies.forEach((enemy, eidx) => {
+                    const dx = bullet.x - enemy.x;
+                    const dy = bullet.y - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 30) {
+                        const dmg = selectedOperator.name === 'Sniper' ? 30 : 10;
+                        gameState.score += dmg;
+                        gameState.bullets.splice(bidx, 1);
+                        enemy.health -= dmg / 10;
+                        if (enemy.health <= 0) {
+                            gameState.enemies.splice(eidx, 1);
+                            gameState.kills++;
+                        }
+                    }
+                });
+            });
+
+            // Enemy collision with player
+            gameState.enemies.forEach(e => {
+                const dx = e.x - gameState.playerX;
+                const dy = e.y - gameState.playerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 40) {
+                    gameState.health -= 5;
+                    e.y = -50;
+                }
+            });
+
+            spawnEnemies();
+
+            if (gameState.health <= 0) {
+                endGame();
+            }
+
+            updateUI();
+        }
+
+        function renderGame() {
+            // Clear canvas
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw enemies
+            gameState.enemies.forEach(e => {
+                ctx.fillStyle = '#FF4444';
+                ctx.fillRect(e.x, e.y, 40, 40);
+                ctx.strokeStyle = '#CC0000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(e.x, e.y, 40, 40);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🎯', e.x + 20, e.y + 25);
+            });
+
+            // Draw bullets
+            gameState.bullets.forEach(b => {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw player
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(gameState.playerX, gameState.playerY, 50, 30);
+            ctx.strokeStyle = '#228B22';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gameState.playerX, gameState.playerY, 50, 30);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(selectedOperator.icon, gameState.playerX + 25, gameState.playerY + 22);
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            document.getElementById('killCount').textContent = gameState.kills;
+            document.getElementById('healthDisplay').textContent = Math.max(0, gameState.health);
+        }
+
+        function gameLoop() {
+            updateGame();
+            renderGame();
+            if (gameState.isRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function pauseGame() {
+            gameState.isPaused = !gameState.isPaused;
+            if (!gameState.isPaused) {
+                gameLoop();
+            }
+        }
+
+        function endGame() {
+            gameState.isRunning = false;
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('gameOverModal').classList.add('show');
+            saveScore();
+        }
+
+        function backToMenu() {
+            document.getElementById('gameOverModal').classList.remove('show');
+            showMenu();
+        }
+
+        // Leaderboard
+        function saveScore() {
+            let scores = JSON.parse(localStorage.getItem('gunGameScores') || '[]');
+            scores.push({
+                name: selectedOperator.name,
+                score: gameState.score,
+                date: new Date().toLocaleDateString()
+            });
+            scores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('gunGameScores', JSON.stringify(scores.slice(0, 10)));
+        }
+
+        function showLeaderboard() {
+            renderLeaderboard();
+            showScreen('leaderboard');
+        }
+
+        function renderLeaderboard() {
+            const scores = JSON.parse(localStorage.getItem('gunGameScores') || '[]');
+            const entries = document.getElementById('leaderboardEntries');
+            entries.innerHTML = scores.map((score, idx) => `
+                <div class="leaderboard-entry">
+                    <div class="leaderboard-rank">#${idx + 1}</div>
+                    <div class="leaderboard-player">${score.name}</div>
+                    <div class="leaderboard-score">${score.score}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearLeaderboard() {
+            if (confirm('Clear all scores?')) {
+                localStorage.removeItem('gunGameScores');
+                renderLeaderboard();
+            }
+        }
+    </script>
+</body>
+
+</html>
