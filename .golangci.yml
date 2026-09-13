@@ -9,7 +9,10 @@ linters:
   disable:
     - depguard # enforces that only deps on a whitelist can be used (meant for orgs, not small projects)
     - exhaustruct
+    - exhaustruct_v5
     - forbidigo # we need to use fmt.Print*()
+    - goconst
+    - gomodguard # replaced by gomodguard_v2
     - gosmopolitan # we use chinese characters in a test
     - govet # we run the official go vet separately
     - noinlineerr # inline errors are fine
@@ -48,7 +51,12 @@ formatters:
     - gofumpt
   settings:
     gofumpt:
-      extra-rules: true
+      extra:
+        # extra rules explained here: https://github.com/mvdan/gofumpt#extra-rules-behind--extra
+        balance-calls: true
+        clothe-returns: true
+        group-params: true
+
   exclusions:
     generated: lax
     paths:

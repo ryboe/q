@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
       - name: set up go
-        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
+        uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
       - name: lint
@@ -27,11 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
       - name: set up go
-        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
+        uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
       - name: run go vet
@@ -49,11 +49,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
       - name: set up go
-        uses: actions/setup-go@v6 # TODO: replace with WillAbides/setup-go-faster@v1 when it's fixed
+        uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
       - name: run unit tests
