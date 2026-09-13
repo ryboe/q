@@ -68,15 +68,16 @@ You also can simply `tail -f $TMPDIR/q`, but it's highly recommended to use the 
 
 ## Editor Integration
 
-### VS Code
+### VS Code / Zed
 
-`Preferences > User Snippets > Go`
+VS Code: `Preferences > User Snippets > Go`
+Zed: `~/.config/zed/snippets/go.json`
 
 ```json
 "qq": {
     "prefix": "qq",
     "body": "q.Q($1) // DEBUG",
-    "description": "Pretty-print to $TMPDIR/q"
+    "description": "Pretty-print to $TMPDIR/q",
 }
 ```
 
@@ -92,17 +93,6 @@ q.Q($1) // DEBUG
     <tabTrigger>qq</tabTrigger>
     <scope>source.go</scope>
 </snippet>
-```
-
-### Atom
-
-`Atom > Open Your Snippets`
-
-```coffee
-'.source.go':
-    'qq':
-        'prefix': 'qq'
-        'body': 'q.Q($1) // DEBUG'
 ```
 
 ### JetBrains GoLand
