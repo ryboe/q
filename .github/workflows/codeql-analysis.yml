@@ -1,13 +1,15 @@
 name: CodeQL
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize]
   push:
     branches:
       - main
 
 jobs:
   analyze:
-    name: Analyze
+    name: analyze
     runs-on: ubuntu-latest
     permissions:
       actions: read
