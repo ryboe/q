@@ -51,6 +51,8 @@ func argName(arg ast.Expr) string {
 // returns its arguments as a slice of strings. If the argument is a literal,
 // argNames will return an empty string at the index position of that argument.
 // For example, q.Q(ip, port, 5432) would return []string{"ip", "port", ""}.
+// If zero or multiple q.Q() calls appear on the same line, argNames returns
+// nil because the active call cannot be uniquely identified.
 // argNames returns an error if the source text cannot be parsed.
 func argNames(filename string, line int) ([]string, error) {
 	fset := token.NewFileSet()
@@ -59,8 +61,13 @@ func argNames(filename string, line int) ([]string, error) {
 		return nil, fmt.Errorf("failed to parse %q: %w", filename, err)
 	}
 
-	var names []string
+	var matched *ast.CallExpr
+	matches := 0
 	ast.Inspect(f, func(n ast.Node) bool {
+		if matches > 1 {
+			return false
+		}
+
 		call, is := n.(*ast.CallExpr)
 		if !is {
 			// The node is not a function call.
@@ -78,12 +85,19 @@ func argNames(filename string, line int) ([]string, error) {
 			return true
 		}
 
-		for _, arg := range call.Args {
-			names = append(names, argName(arg))
-		}
+		matched = call
+		matches++
 
 		return true
 	})
+
+	var names []string
+	if matches == 1 {
+		names = make([]string, 0, len(matched.Args))
+		for _, arg := range matched.Args {
+			names = append(names, argName(arg))
+		}
+	}
 
 	return names, nil
 }
