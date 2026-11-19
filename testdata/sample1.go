@@ -12,4 +12,20 @@ func main() {
 	g := e[1:]
 
 	q.Q(a, b, c, d, e, f, g)
+
+	q.Q(
+		a,
+		b,
+		c,
+	)
+
+	q.Q(func(n int) bool {
+		return n > 0
+	}(1), a)
+
+	q.
+		Q(
+			a,
+			b,
+		)
 }
