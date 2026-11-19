@@ -62,37 +62,24 @@ func argNames(filename string, line int) ([]string, error) {
 	}
 
 	var matched *ast.CallExpr
-	matches := 0
-	ast.Inspect(f, func(n ast.Node) bool {
-		if matches > 1 {
-			return false
-		}
-
+	for n := range ast.Preorder(f) {
 		call, is := n.(*ast.CallExpr)
-		if !is {
-			// The node is not a function call.
-			return true // visit next node
+		if !is || fset.Position(call.Lparen).Line != line || !isQCall(call) {
+			continue
 		}
 
-		if fset.Position(call.Lparen).Line != line {
-			// The node is a function call, but it's on the wrong line.
-			return true
-		}
+		if matched != nil {
+			// Multiple q.Q() calls on the same line; can't tell which one ran.
+			matched = nil
 
-		if !isQCall(call) {
-			// The node is a function call on correct line, but it's not a Q()
-			// function.
-			return true
+			break
 		}
 
 		matched = call
-		matches++
-
-		return true
-	})
+	}
 
 	var names []string
-	if matches == 1 {
+	if matched != nil {
 		names = make([]string, 0, len(matched.Args))
 		for _, arg := range matched.Args {
 			names = append(names, argName(arg))
