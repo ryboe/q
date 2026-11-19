@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"os"
+	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/kr/pretty"
@@ -241,6 +244,58 @@ func TestArgNames(t *testing.T) {
 				if got[i] != tc.want[i] {
 					t.Fatalf("\ngot:  %#v\nwant: %#v", got, tc.want)
 				}
+			}
+		})
+	}
+}
+
+// TestArgNamesMultipleCallsSameLine verifies that argNames() returns nil when
+// multiple q.Q() calls appear on the same line (since runtime.Caller cannot
+// distinguish which call executed), while still resolving nested calls when
+// they are on different lines.
+func TestArgNamesMultipleCallsSameLine(t *testing.T) {
+	const src = `package main
+
+import "q"
+
+func main() {
+	a, b := 1, 2
+	q.Q(a); q.Q(b)
+	if a > 0 { q.Q(a) } else { q.Q(b) }
+	q.Q(); q.Q(b)
+	q.Q(a, func() { q.Q(b) })
+	q.Q(a, func() {
+		q.Q(b)
+	})
+}
+`
+	filename := filepath.Join(t.TempDir(), "same_line.go")
+	if err := os.WriteFile(filename, []byte(src), 0o600); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	testCases := []struct {
+		name string
+		line int
+		want []string
+	}{
+		{name: "sequential calls on same line", line: 7, want: nil},
+		{name: "if/else calls on same line", line: 8, want: nil},
+		{name: "zero-arg and one-arg calls on same line", line: 9, want: nil},
+		{name: "nested closure call on same line", line: 10, want: nil},
+		{name: "nested closure outer call on distinct line", line: 11, want: []string{"a", ""}},
+		{name: "nested closure inner call on distinct line", line: 12, want: []string{"b"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := argNames(filename, tc.line)
+			if err != nil {
+				t.Fatalf("argNames: failed to parse %q: %v", filename, err)
+			}
+
+			if !slices.Equal(got, tc.want) {
+				t.Fatalf("\ngot:  %#v\nwant: %#v", got, tc.want)
 			}
 		})
 	}

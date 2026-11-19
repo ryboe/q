@@ -57,3 +57,50 @@ func TestQMultiline(t *testing.T) {
 		}
 	}
 }
+
+// TestQMultipleCallsSameLine verifies end-to-end that multiple Q() calls on the
+// same line fall back to unnamed output instead of printing wrong variable
+// names.
+func TestQMultipleCallsSameLine(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
+	t.Setenv("TMP", tmpDir)
+	t.Setenv("TEMP", tmpDir)
+
+	first := 1
+	second := "two"
+	call := func(fn func()) int {
+		fn()
+
+		return 0
+	}
+
+	Q(first, call(func() { Q(second) }))
+
+	logPath := filepath.Join(os.TempDir(), "q")
+	raw, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read %q: %v", logPath, err)
+	}
+
+	got := string(raw)
+
+	for _, want := range []string{
+		colorize("two", cyan),
+		colorize("int(1)", cyan),
+		colorize("int(0)", cyan),
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("\nlog output missing %q\ngot:\n%q", want, got)
+		}
+	}
+
+	for _, forbidden := range []string{
+		colorize("first", bold) + "=",
+		colorize("second", bold) + "=",
+	} {
+		if strings.Contains(got, forbidden) {
+			t.Errorf("\nlog output unexpectedly contained %q\ngot:\n%q", forbidden, got)
+		}
+	}
+}
