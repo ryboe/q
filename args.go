@@ -64,7 +64,18 @@ func argNames(filename string, line int) ([]string, error) {
 	var matched *ast.CallExpr
 	for n := range ast.Preorder(f) {
 		call, is := n.(*ast.CallExpr)
-		if !is || fset.Position(call.Lparen).Line != line || !isQCall(call) {
+		if !is {
+			continue
+		}
+
+		// runtime.Caller reports the line of a call's opening parenthesis
+		// (rather than its start or closing parenthesis), which matters when a
+		// q.Q(...) call spans multiple lines.
+		if fset.Position(call.Lparen).Line != line {
+			continue
+		}
+
+		if !isQCall(call) {
 			continue
 		}
 
