@@ -301,6 +301,60 @@ func main() {
 	}
 }
 
+// TestArgNamesIgnoresQVarMethods verifies that method calls on a variable named
+// q (e.g. q.Get(key), q.Has(x)) are not falsely matched as q.Q() calls.
+func TestArgNamesIgnoresQVarMethods(t *testing.T) {
+	testCases := []struct {
+		name, imp, body string
+		want            []string
+	}{
+		{
+			name: "dot import with q method in condition on same line",
+			imp:  `import . "github.com/ryboe/q"`,
+			body: `if q.Has(x) { Q(y) }`,
+			want: []string{"y"},
+		},
+		{
+			name: "dot import with q method as argument",
+			imp:  `import . "github.com/ryboe/q"`,
+			body: `Q(q.Get(key))`,
+			want: []string{"q.Get(key)"},
+		},
+		{
+			name: "standard import with shadowed q method in closure",
+			imp:  `import "github.com/ryboe/q"`,
+			body: `q.Q(func(q query) string { return q.Get(key) }(obj))`,
+			want: []string{"func(q query) string {\n    return q.Get(key)\n}(obj)"},
+		},
+		{
+			name: "aliased import does not mislabel using q method arg",
+			imp:  `import dbg "github.com/ryboe/q"`,
+			body: `dbg.Q(q.Get(key))`,
+			want: nil,
+		},
+	}
+
+	dir := t.TempDir()
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			src := fmt.Sprintf("package main\n%s\nfunc main() {\n\t%s\n}\n", tc.imp, tc.body)
+			filename := filepath.Join(dir, fmt.Sprintf("case_%d.go", i))
+			if err := os.WriteFile(filename, []byte(src), 0o600); err != nil {
+				t.Fatalf("failed to write test file: %v", err)
+			}
+
+			got, err := argNames(filename, 4)
+			if err != nil {
+				t.Fatalf("argNames: failed to parse %q: %v", filename, err)
+			}
+
+			if !slices.Equal(got, tc.want) {
+				t.Fatalf("\ngot:  %#v\nwant: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
 // TestArgNamesBadFilename verifies that argNames() returns an error if given an
 // invalid filename.
 func TestArgNamesBadFilename(t *testing.T) {
@@ -471,7 +525,8 @@ func TestIsQCall(t *testing.T) {
 			id: 3,
 			expr: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{Name: "q"},
+					X:   &ast.Ident{Name: "q"},
+					Sel: &ast.Ident{Name: "Q"},
 				},
 			},
 			want: true,
@@ -480,7 +535,8 @@ func TestIsQCall(t *testing.T) {
 			id: 4,
 			expr: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
-					X: &ast.Ident{Name: "Q"},
+					X:   &ast.Ident{Name: "q"},
+					Sel: &ast.Ident{Name: "Get"},
 				},
 			},
 			want: false,
@@ -489,13 +545,33 @@ func TestIsQCall(t *testing.T) {
 			id: 5,
 			expr: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
-					X: &ast.BadExpr{},
+					X: &ast.Ident{Name: "q"},
 				},
 			},
 			want: false,
 		},
 		{
 			id: 6,
+			expr: &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X:   &ast.Ident{Name: "Q"},
+					Sel: &ast.Ident{Name: "Q"},
+				},
+			},
+			want: false,
+		},
+		{
+			id: 7,
+			expr: &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X:   &ast.BadExpr{},
+					Sel: &ast.Ident{Name: "Q"},
+				},
+			},
+			want: false,
+		},
+		{
+			id: 8,
 			expr: &ast.CallExpr{
 				Fun: &ast.Ident{Name: "q"},
 			},
