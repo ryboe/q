@@ -104,3 +104,35 @@ func TestQMultipleCallsSameLine(t *testing.T) {
 		}
 	}
 }
+
+type testQuery struct{}
+
+func (testQuery) Get(k string) string {
+	return "val:" + k
+}
+
+// TestQWithQVarMethod verifies end-to-end that a method call on a local
+// variable named q inside Q() is not falsely matched as a second q.Q() call.
+func TestQWithQVarMethod(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
+	t.Setenv("TMP", tmpDir)
+	t.Setenv("TEMP", tmpDir)
+
+	var q testQuery
+	key := "user_id"
+
+	Q(q.Get(key))
+
+	logPath := filepath.Join(os.TempDir(), "q")
+	raw, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read %q: %v", logPath, err)
+	}
+
+	got := string(raw)
+	want := fmt.Sprintf("%s=%s", colorize("q.Get(key)", bold), colorize("val:user_id", cyan))
+	if !strings.Contains(got, want) {
+		t.Fatalf("\nlog output missing %q\ngot:\n%q", want, got)
+	}
+}

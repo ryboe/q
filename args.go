@@ -204,9 +204,7 @@ func isQFunction(n *ast.CallExpr) bool {
 	return ident.Name == "Q"
 }
 
-// isQPackage returns true if the given function call expression is in the q
-// package. Since Q() is the only exported function from the q package, this is
-// sufficient for determining that we've found Q() in the source text.
+// isQPackage returns true if the given function call expression is q.Q().
 func isQPackage(n *ast.CallExpr) bool {
 	sel, is := n.Fun.(*ast.SelectorExpr) // SelectorExpr example: a.B()
 	if !is {
@@ -218,5 +216,5 @@ func isQPackage(n *ast.CallExpr) bool {
 		return false
 	}
 
-	return ident.Name == "q"
+	return ident.Name == "q" && sel.Sel != nil && sel.Sel.Name == "Q"
 }
