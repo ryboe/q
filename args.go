@@ -67,7 +67,7 @@ func argNames(filename string, line int) ([]string, error) {
 			return true // visit next node
 		}
 
-		if fset.Position(call.End()).Line != line {
+		if fset.Position(call.Lparen).Line != line {
 			// The node is a function call, but it's on the wrong line.
 			return true
 		}

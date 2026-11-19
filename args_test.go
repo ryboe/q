@@ -194,24 +194,55 @@ func TestExtractingArgsFromSourceText(t *testing.T) {
 }
 
 // TestArgNames verifies that argNames() is able to find the q.Q() call in the
-// sample text and extract the argument names. For example, if q.q(a, b, c) is
+// sample text and extract the argument names. For example, if q.Q(a, b, c) is
 // in the sample text, argNames() should return []string{"a", "b", "c"}.
 func TestArgNames(t *testing.T) {
 	const filename = "testdata/sample1.go"
-	want := []string{"a", "b", "c", "d", "e", "f", "g"}
-	got, err := argNames(filename, 14)
-	if err != nil {
-		t.Fatalf("argNames: failed to parse %q: %v", filename, err)
+
+	testCases := []struct {
+		name string
+		line int
+		want []string
+	}{
+		{
+			name: "single-line call",
+			line: 14,
+			want: []string{"a", "b", "c", "d", "e", "f", "g"},
+		},
+		{
+			name: "multi-line arguments",
+			line: 16,
+			want: []string{"a", "b", "c"},
+		},
+		{
+			name: "multi-line expression argument",
+			line: 22,
+			want: []string{"func(n int) bool {\n    return n > 0\n}(1)", "a"},
+		},
+		{
+			name: "multi-line selector and arguments",
+			line: 27,
+			want: []string{"a", "b"},
+		},
 	}
 
-	if len(got) != len(want) {
-		t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := argNames(filename, tc.line)
+			if err != nil {
+				t.Fatalf("argNames: failed to parse %q: %v", filename, err)
+			}
 
-	for i := range got {
-		if got[i] != want[i] {
-			t.Fatalf("\ngot:  %#v\nwant: %#v", got, want)
-		}
+			if len(got) != len(tc.want) {
+				t.Fatalf("\ngot:  %#v\nwant: %#v", got, tc.want)
+			}
+
+			for i := range got {
+				if got[i] != tc.want[i] {
+					t.Fatalf("\ngot:  %#v\nwant: %#v", got, tc.want)
+				}
+			}
+		})
 	}
 }
 
