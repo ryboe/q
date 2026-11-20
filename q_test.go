@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 // TestQMultiline verifies end-to-end that multi-line Q() calls resolve the
@@ -134,5 +136,88 @@ func TestQWithQVarMethod(t *testing.T) {
 	want := fmt.Sprintf("%s=%s", colorize("q.Get(key)", bold), colorize("val:user_id", cyan))
 	if !strings.Contains(got, want) {
 		t.Fatalf("\nlog output missing %q\ngot:\n%q", want, got)
+	}
+}
+
+type reentrantGoStringer struct {
+	val int
+}
+
+func (r reentrantGoStringer) GoString() string {
+	Q(r.val)
+
+	return fmt.Sprintf("reentrantGoStringer{%d}", r.val)
+}
+
+// TestQReentrantGoString verifies that calling Q() inside an argument's
+// GoString() method does not deadlock and logs both the inner and outer calls.
+func TestQReentrantGoString(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
+	t.Setenv("TMP", tmpDir)
+	t.Setenv("TEMP", tmpDir)
+
+	r := reentrantGoStringer{val: 42}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		Q(r)
+	}()
+
+	const timeout = 5 * time.Second
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		t.Fatal("Q() deadlocked on re-entrant GoString() call")
+	}
+
+	logPath := filepath.Join(os.TempDir(), "q")
+	raw, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read %q: %v", logPath, err)
+	}
+
+	got := string(raw)
+	wants := []string{
+		fmt.Sprintf("%s=%s", colorize("r.val", bold), colorize("int(42)", cyan)),
+		fmt.Sprintf("%s=%s", colorize("r", bold), colorize("reentrantGoStringer{42}", cyan)),
+	}
+	for _, want := range wants {
+		if !strings.Contains(got, want) {
+			t.Errorf("\nlog output missing %q\ngot:\n%q", want, got)
+		}
+	}
+}
+
+// TestQConcurrent verifies that concurrent Q() calls are race-free after
+// moving formatting and source parsing outside std.mu.
+func TestQConcurrent(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
+	t.Setenv("TMP", tmpDir)
+	t.Setenv("TEMP", tmpDir)
+
+	const workers = 8
+	var wg sync.WaitGroup
+	for i := range workers {
+		wg.Go(func() {
+			Q(i)
+		})
+	}
+	wg.Wait()
+
+	logPath := filepath.Join(os.TempDir(), "q")
+	raw, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read %q: %v", logPath, err)
+	}
+
+	got := string(raw)
+	for i := range workers {
+		want := fmt.Sprintf("%s=%s", colorize("i", bold), colorize(fmt.Sprintf("int(%d)", i), cyan))
+		if !strings.Contains(got, want) {
+			t.Errorf("\nlog output missing %q\ngot:\n%q", want, got)
+		}
 	}
 }

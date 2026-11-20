@@ -28,6 +28,19 @@ var (
 
 // Q pretty-prints the given arguments to the $TMPDIR/q log file.
 func Q(v ...any) {
+	// Format arguments and resolve caller/source info before acquiring std.mu
+	// so re-entrant q.Q() calls from a GoString() method cannot deadlock, and
+	// concurrent callers are not blocked by source parsing.
+	args := formatArgs(v...)
+	funcName, file, line, callerErr := getCallerInfo()
+	if callerErr == nil {
+		// q.Q(foo, bar, baz) -> []string{"foo", "bar", "baz"}
+		if names, err := argNames(file, line); err == nil {
+			// Convert the arguments to name=value strings.
+			args = prependArgName(names, args)
+		}
+	}
+
 	std.mu.Lock()
 	defer std.mu.Unlock()
 
@@ -38,31 +51,15 @@ func Q(v ...any) {
 		}
 	}()
 
-	args := formatArgs(v...)
-	funcName, file, line, err := getCallerInfo()
-	if err != nil {
-		std.output(args...) // no name=value printing
-
-		return
+	if callerErr == nil {
+		// Print a header line if this q.Q() call is in a different file or
+		// function than the previous q.Q() call, or if the 2s timer expired.
+		// A header line looks like this: [14:00:36 main.go main.main:122].
+		header := std.header(funcName, file, line)
+		if header != "" {
+			fmt.Fprint(&std.buf, "\n", header, "\n")
+		}
 	}
 
-	// Print a header line if this q.Q() call is in a different file or
-	// function than the previous q.Q() call, or if the 2s timer expired.
-	// A header line looks like this: [14:00:36 main.go main.main:122].
-	header := std.header(funcName, file, line)
-	if header != "" {
-		fmt.Fprint(&std.buf, "\n", header, "\n")
-	}
-
-	// q.Q(foo, bar, baz) -> []string{"foo", "bar", "baz"}
-	names, err := argNames(file, line)
-	if err != nil {
-		std.output(args...) // no name=value printing
-
-		return
-	}
-
-	// Convert the arguments to name=value strings.
-	args = prependArgName(names, args)
 	std.output(args...)
 }
