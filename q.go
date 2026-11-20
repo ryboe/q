@@ -51,14 +51,13 @@ func Q(v ...any) {
 		}
 	}()
 
-	if callerErr == nil {
-		// Print a header line if this q.Q() call is in a different file or
-		// function than the previous q.Q() call, or if the 2s timer expired.
-		// A header line looks like this: [14:00:36 main.go main.main:122].
-		header := std.header(funcName, file, line)
-		if header != "" {
-			fmt.Fprint(&std.buf, "\n", header, "\n")
-		}
+	// Print a header line if this q.Q() call is in a different file or
+	// function than the previous q.Q() call, or if the 2s timer expired.
+	// A header line looks like this: [14:00:36 dir/main.go:122 main.main]
+	// (or [14:00:36] if caller info is unavailable).
+	header := std.header(funcName, file, line)
+	if header != "" {
+		fmt.Fprint(&std.buf, "\n", header, "\n")
 	}
 
 	std.output(args...)
