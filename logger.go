@@ -38,20 +38,26 @@ type logger struct {
 	lastFunc  string       // last function to call q.Q(). determines when to print header
 }
 
-// header returns a formatted header string, e.g. [14:00:36 main.go main.main:122]
-// if the 2s timer has expired, or the calling function or filename has changed.
-// If none of those things are true, it returns an empty string.
+// header returns a formatted header string, e.g. [14:00:36 dir/main.go:122 main.main]
+// (or [14:00:36] when caller info is unavailable) if the 2s timer has expired,
+// or the calling function or filename has changed. If none of those things are
+// true, it returns an empty string.
 func (l *logger) header(funcName, file string, line int) string {
 	if !l.shouldPrintHeader(funcName, file) {
 		return ""
 	}
 
-	now := time.Now().UTC()
+	now := time.Now()
 	l.start = now
 	l.lastFunc = funcName
 	l.lastFile = file
 
-	return fmt.Sprintf("[%s %s:%d %s]", now.Format("15:04:05"), shortFile(file), line, funcName)
+	timestamp := now.UTC().Format("15:04:05")
+	if funcName == "" && file == "" {
+		return fmt.Sprintf("[%s]", timestamp)
+	}
+
+	return fmt.Sprintf("[%s %s:%d %s]", timestamp, shortFile(file), line, funcName)
 }
 
 func (l *logger) shouldPrintHeader(funcName, file string) bool {
@@ -97,6 +103,10 @@ func (l *logger) flush() (err error) {
 // output writes to the log buffer. Each log message is prepended with a
 // timestamp. Long lines are broken at 80 characters.
 func (l *logger) output(args ...string) {
+	if l.start.IsZero() {
+		l.start = time.Now()
+	}
+
 	timestamp := fmt.Sprintf("%.3fs", time.Since(l.start).Seconds())
 	timestampWidth := len(timestamp) + 1 // +1 for padding space after timestamp
 	timestamp = colorize(timestamp, yellow)
