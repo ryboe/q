@@ -2,17 +2,21 @@ name: PR
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint:
     name: golangci-lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          persist-credentials: false
       - name: set up go
         uses: WillAbides/setup-go-faster@v1
         with:
@@ -25,11 +29,12 @@ jobs:
   check:
     name: go vet and staticcheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          persist-credentials: false
       - name: set up go
         uses: WillAbides/setup-go-faster@v1
         with:
@@ -37,24 +42,36 @@ jobs:
       - name: run go vet
         run: go vet ./...
       - name: run staticcheck
-        uses: dominikh/staticcheck-action@v1
-        with:
-          # uses setup-go-faster by default, which is currently failing,
-          # so we disable automatic installation of Go and install Go
-          # ourselves with setup-go
-          install-go: false
+        run: go run honnef.co/go/tools/cmd/staticcheck@latest ./...
 
   test:
     name: unit tests with race detector enabled
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          persist-credentials: false
       - name: set up go
         uses: WillAbides/setup-go-faster@v1
         with:
           go-version-file: go.mod
       - name: run unit tests
         run: go test -v -race ./...
+
+  vulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: set up go
+        uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version-file: go.mod
+      - name: run govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

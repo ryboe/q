@@ -2,24 +2,29 @@ name: CodeQL
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
   push:
     branches:
       - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:
     name: analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       actions: read
+      contents: read
       security-events: write
 
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          persist-credentials: false
 
       # Initializes the CodeQL tools for scanning.
       - name: initialize codeql
