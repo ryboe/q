@@ -1,9 +1,15 @@
+// Copyright 2012 Keith Rarick. All rights reserved.
+// Adapted from github.com/kr/pretty v0.3.1.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package pretty
 
 import (
 	"reflect"
 )
 
+// nolint: cyclop,exhaustive,gocyclo
 func nonzero(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Bool:
@@ -19,23 +25,26 @@ func nonzero(v reflect.Value) bool {
 	case reflect.String:
 		return v.String() != ""
 	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
+		for i := range v.NumField() {
 			if nonzero(getField(v, i)) {
 				return true
 			}
 		}
+
 		return false
 	case reflect.Array:
-		for i := 0; i < v.Len(); i++ {
+		for i := range v.Len() {
 			if nonzero(v.Index(i)) {
 				return true
 			}
 		}
+
 		return false
-	case reflect.Map, reflect.Interface, reflect.Slice, reflect.Ptr, reflect.Chan, reflect.Func:
+	case reflect.Map, reflect.Interface, reflect.Slice, reflect.Pointer, reflect.Chan, reflect.Func:
 		return !v.IsNil()
 	case reflect.UnsafePointer:
 		return v.Pointer() != 0
+	default:
+		return true
 	}
-	return true
 }

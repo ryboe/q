@@ -13,7 +13,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kr/pretty"
+	"github.com/ryboe/q/internal/pretty"
 )
 
 // TestExtractingArgsFromSourceText verifies that exprToString() and argName()

@@ -15,7 +15,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kr/pretty"
+	"github.com/ryboe/q/internal/pretty"
 )
 
 // argName returns the source text of the given argument if it's a variable or
