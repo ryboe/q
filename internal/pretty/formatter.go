@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"github.com/kr/text"
 	"github.com/rogpeppe/go-internal/fmtsort"
 )
 
@@ -56,7 +55,7 @@ func (p *printer) flush() {
 func (p *printer) indent() *printer {
 	q := *p
 	q.tw = tabwriter.NewWriter(p.Writer, tabWidth, tabWidth, 1, ' ', 0)
-	q.Writer = text.NewIndentWriter(q.tw, []byte{'\t'})
+	q.Writer = newIndentWriter(q.tw, []byte{'\t'})
 
 	return &q
 }

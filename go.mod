@@ -2,7 +2,4 @@ module github.com/ryboe/q
 
 go 1.26.0
 
-require (
-	github.com/kr/text v0.2.0
-	github.com/rogpeppe/go-internal v1.16.0
-)
+require github.com/rogpeppe/go-internal v1.16.0
