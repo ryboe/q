@@ -1,8 +1,9 @@
 # Contributing
 
-Before writing any code you should know that I consider `q` to be feature complete. I will accept
-bug fixes and obvious code cleanups, but new features are likely to get rejected. `q` is intended to
-be a stupid simple tool with no knobs.
+Before writing any code you should know that I consider `q` to be feature
+complete. I will accept bug fixes and obvious code cleanups, but new features
+are likely to get rejected. `q` is intended to be a stupid simple tool with no
+knobs.
 
 ## Create an Issue First
 
