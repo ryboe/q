@@ -256,7 +256,7 @@ func TestArgNames(t *testing.T) {
 func TestArgNamesMultipleCallsSameLine(t *testing.T) {
 	const src = `package main
 
-import "q"
+import "github.com/ryboe/q"
 
 func main() {
 	a, b := 1, 2
