@@ -1,6 +1,6 @@
 package main
 
-import "q"
+import "github.com/ryboe/q"
 
 func main() {
 	a := 123

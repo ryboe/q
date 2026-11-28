@@ -19,7 +19,7 @@ Type `q.Q` instead of `fmt.Printf` and your variables will be printed like this:
 ## Basic Usage
 
 ```go
-import "q"
+import "github.com/ryboe/q"
 ...
 q.Q(a, b, c)
 ```
@@ -29,7 +29,7 @@ For best results, dedicate a terminal to tailing `$TMPDIR/q` while you work.
 ## Install
 
 ```sh
-git clone https://github.com/ryboe/q "$(go env GOPATH)"/src/q
+go get github.com/ryboe/q
 ```
 
 Put these functions in your shell config. Typing `qq` or `rmqq` will then start
