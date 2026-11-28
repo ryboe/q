@@ -11,8 +11,6 @@ import (
 	"reflect"
 	"strconv"
 	"text/tabwriter"
-
-	"github.com/rogpeppe/go-internal/fmtsort"
 )
 
 const (
@@ -193,16 +191,16 @@ func (p *printer) printMap(v reflect.Value, showType bool) {
 		pp = p.indent()
 	}
 
-	sm := fmtsort.Sort(v)
-	for i := range v.Len() {
-		pp.printValue(sm.Key[i], false, true)
+	entries := sortMap(v)
+	for i, e := range entries {
+		pp.printValue(e.key, false, true)
 		pp.writeByte(':')
 		if expand {
 			pp.writeByte('\t')
 		}
 		showTypeInStruct := t.Elem().Kind() == reflect.Interface
-		pp.printValue(sm.Value[i], showTypeInStruct, true)
-		pp.writeSeparator(expand, i < v.Len()-1)
+		pp.printValue(e.value, showTypeInStruct, true)
+		pp.writeSeparator(expand, i < len(entries)-1)
 	}
 	if expand {
 		pp.flush()

@@ -1,7 +1,6 @@
 version: "2"
 
 run:
-  modules-download-mode: vendor
   tests: true
 
 linters:

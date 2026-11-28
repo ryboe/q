@@ -7,7 +7,8 @@
 // useful during debugging, to avoid wrapping long output lines in
 // the terminal.
 //
-// Adapted from github.com/kr/pretty (v0.3.1), Copyright 2012 Keith Rarick.
+// Adapted from github.com/kr/pretty (v0.3.1), github.com/kr/text (v0.2.0),
+// and github.com/rogpeppe/go-internal (v1.16.0).
 package pretty
 
 import (
