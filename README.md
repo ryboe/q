@@ -10,11 +10,11 @@ Type `q.Q` instead of `fmt.Printf` and your variables will be printed like this:
 
 ## Why is this better than `fmt.Printf`?
 
-* Faster to type
-* Pretty-printed vars and expressions
-* Easier to see inside structs
-* Doesn't go to noisy-ass stdout. It goes to `$TMPDIR/q`.
-* Pretty colors!
+- Faster to type
+- Pretty-printed vars and expressions
+- Easier to see inside structs
+- Doesn't go to noisy-ass stdout. It goes to `$TMPDIR/q`.
+- Pretty colors!
 
 ## Basic Usage
 
@@ -63,7 +63,8 @@ rmqq() {
 }
 ```
 
-You also can simply `tail -f $TMPDIR/q`, but it's highly recommended to use the above commands.
+You also can simply `tail -f $TMPDIR/q`, but it's highly recommended to use the
+above commands.
 
 ## Editor Integration
 
@@ -100,10 +101,10 @@ q.Q($1) // DEBUG
 
 In `Go`, add a new template with:
 
-* Abbreviation: `qq`
-* Description: `Pretty-print to $TMPDIR/q`
-* Template text: `q.Q($END$) // DEBUG`
-* Applicable in: select the `Go` scope
+- Abbreviation: `qq`
+- Description: `Pretty-print to $TMPDIR/q`
+- Template text: `q.Q($END$) // DEBUG`
+- Applicable in: select the `Go` scope
 
 ### Emacs
 
