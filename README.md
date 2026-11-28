@@ -1,6 +1,5 @@
 # q
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/ryboe/q)](https://goreportcard.com/report/github.com/ryboe/q)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/ryboe/q)](https://pkg.go.dev/github.com/ryboe/q)
 
 q is a better way to do print statement debugging.
